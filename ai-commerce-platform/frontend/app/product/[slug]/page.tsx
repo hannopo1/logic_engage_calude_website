@@ -21,6 +21,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       .product(params.slug)
       .then((p) => {
         setProduct(p);
+        api.track({ event_type: "product_view", product_id: p.id });
         return api.recommend(p.id);
       })
       .then((r) => {

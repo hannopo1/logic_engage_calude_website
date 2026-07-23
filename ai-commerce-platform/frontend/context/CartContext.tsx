@@ -36,8 +36,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     refresh();
   }, []);
 
-  const add = async (productId: number, qty = 1) =>
+  const add = async (productId: number, qty = 1) => {
     setCart(await api.addToCart(productId, qty));
+    api.track({ event_type: "add_to_cart", product_id: productId });
+  };
   const update = async (productId: number, qty: number) =>
     setCart(await api.updateCart(productId, qty));
   const remove = async (productId: number) =>

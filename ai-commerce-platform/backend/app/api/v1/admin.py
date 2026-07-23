@@ -5,7 +5,7 @@ orders, approves them, executes assisted purchases, and records shipping.
 """
 from __future__ import annotations
 
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timedelta, timezone
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,7 +15,10 @@ from sqlalchemy.orm import Session
 from app.agents import purchasing, sourcing
 from app.api.deps import get_current_admin
 from app.core.database import get_db
+from app.core.utils import unique_slug
+from app.models.analytics import AnalyticsEvent
 from app.models.order import Order
+from app.models.product import Product
 from app.models.purchase_order import PO_STATUSES, PurchaseOrder
 from app.models.supplier import Supplier, SupplierOffer
 from app.models.user import User
@@ -32,6 +35,15 @@ from app.schemas.fulfillment import (
     SupplierIn,
     SupplierOut,
     SupplierPatch,
+)
+from app.schemas.merchant import (
+    AnalyticsOut,
+    CustomerOut,
+    FunnelStep,
+    ProductAdminOut,
+    ProductIn,
+    ProductPatch,
+    TopItem,
 )
 from app.services import fulfillment_service
 
@@ -263,3 +275,174 @@ def patch_offer(offer_id: int, payload: OfferPatch, db: Session = Depends(get_db
     db.commit()
     db.refresh(offer)
     return offer
+
+
+# ---------- product management ----------
+
+def _product_out(db: Session, p: Product) -> ProductAdminOut:
+    offer_count = db.scalar(
+        select(func.count(SupplierOffer.id)).where(SupplierOffer.product_id == p.id)
+    ) or 0
+    out = ProductAdminOut.model_validate(p)
+    out.offer_count = offer_count
+    return out
+
+
+@router.get("/products", response_model=list[ProductAdminOut])
+def admin_list_products(db: Session = Depends(get_db)) -> list[ProductAdminOut]:
+    rows = db.scalars(select(Product).order_by(Product.created_at.desc()).limit(500))
+    return [_product_out(db, p) for p in rows]
+
+
+@router.post("/products", response_model=ProductAdminOut, status_code=201)
+def admin_create_product(payload: ProductIn, db: Session = Depends(get_db)) -> ProductAdminOut:
+    slug = payload.slug or unique_slug(
+        payload.name, lambda s: db.scalar(select(Product).where(Product.slug == s)) is not None
+    )
+    if db.scalar(select(Product).where(Product.slug == slug)):
+        raise HTTPException(status_code=409, detail="الـ slug مستخدم بالفعل")
+    data = payload.model_dump()
+    data["slug"] = slug
+    product = Product(**data)
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+    return _product_out(db, product)
+
+
+@router.patch("/products/{product_id}", response_model=ProductAdminOut)
+def admin_patch_product(
+    product_id: int, payload: ProductPatch, db: Session = Depends(get_db)
+) -> ProductAdminOut:
+    product = db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="المنتج غير موجود")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(product, k, v)
+    db.commit()
+    db.refresh(product)
+    return _product_out(db, product)
+
+
+# ---------- customers ----------
+
+@router.get("/customers", response_model=list[CustomerOut])
+def admin_list_customers(db: Session = Depends(get_db)) -> list[CustomerOut]:
+    # Aggregate order count + spend per customer in one pass.
+    stats = {
+        row.user_id: (row.n, row.spent)
+        for row in db.execute(
+            select(
+                Order.user_id.label("user_id"),
+                func.count(Order.id).label("n"),
+                func.coalesce(func.sum(Order.total_amount), 0).label("spent"),
+            )
+            .where(Order.user_id.isnot(None), Order.status != "cancelled")
+            .group_by(Order.user_id)
+        ).all()
+    }
+    users = db.scalars(
+        select(User).where(User.role == "customer").order_by(User.created_at.desc()).limit(500)
+    )
+    out: list[CustomerOut] = []
+    for u in users:
+        n, spent = stats.get(u.id, (0, 0))
+        out.append(
+            CustomerOut(
+                id=u.id,
+                email=u.email,
+                first_name=u.first_name,
+                last_name=u.last_name,
+                phone=u.phone,
+                created_at=u.created_at,
+                order_count=n,
+                total_spent=spent,
+            )
+        )
+    return out
+
+
+# ---------- analytics ----------
+
+@router.get("/analytics", response_model=AnalyticsOut)
+def admin_analytics(days: int = Query(default=30, ge=1, le=365), db: Session = Depends(get_db)) -> AnalyticsOut:
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    ev = AnalyticsEvent
+
+    def count(evtype: str) -> int:
+        return db.scalar(
+            select(func.count(ev.id)).where(ev.event_type == evtype, ev.created_at >= since)
+        ) or 0
+
+    def uniq(evtype: str | None = None) -> int:
+        stmt = select(func.count(func.distinct(ev.session_id))).where(ev.created_at >= since)
+        if evtype:
+            stmt = stmt.where(ev.event_type == evtype)
+        return db.scalar(stmt) or 0
+
+    unique_visitors = uniq()
+    page_views = count("page_view")
+    product_views = count("product_view")
+    searches = count("search")
+    add_to_cart = count("add_to_cart")
+    begin_checkout = count("begin_checkout")
+    orders = count("purchase")
+
+    conv = round(orders / unique_visitors * 100, 1) if unique_visitors else 0.0
+
+    funnel = [
+        FunnelStep(key="visit", label="زيارة", count=unique_visitors),
+        FunnelStep(key="product_view", label="مشاهدة منتج", count=uniq("product_view")),
+        FunnelStep(key="add_to_cart", label="إضافة للسلة", count=uniq("add_to_cart")),
+        FunnelStep(key="begin_checkout", label="بدء الدفع", count=uniq("begin_checkout")),
+        FunnelStep(key="purchase", label="شراء", count=uniq("purchase")),
+    ]
+
+    # Top viewed products (join product name).
+    top_products = [
+        TopItem(label=name or f"#{pid}", count=n)
+        for pid, name, n in db.execute(
+            select(ev.product_id, Product.name, func.count(ev.id))
+            .join(Product, Product.id == ev.product_id, isouter=True)
+            .where(ev.event_type == "product_view", ev.created_at >= since, ev.product_id.isnot(None))
+            .group_by(ev.product_id, Product.name)
+            .order_by(func.count(ev.id).desc())
+            .limit(8)
+        ).all()
+    ]
+
+    top_searches = [
+        TopItem(label=q, count=n)
+        for q, n in db.execute(
+            select(ev.query, func.count(ev.id))
+            .where(ev.event_type == "search", ev.created_at >= since, ev.query.isnot(None))
+            .group_by(ev.query)
+            .order_by(func.count(ev.id).desc())
+            .limit(8)
+        ).all()
+    ]
+
+    daily = [
+        TopItem(label=str(day), count=n)
+        for day, n in db.execute(
+            select(func.date(ev.created_at), func.count(func.distinct(ev.session_id)))
+            .where(ev.created_at >= since)
+            .group_by(func.date(ev.created_at))
+            .order_by(func.date(ev.created_at))
+        ).all()
+    ]
+
+    return AnalyticsOut(
+        days=days,
+        unique_visitors=unique_visitors,
+        page_views=page_views,
+        product_views=product_views,
+        searches=searches,
+        add_to_cart=add_to_cart,
+        orders=orders,
+        conversion_rate=conv,
+        funnel=funnel,
+        top_products=top_products,
+        top_searches=top_searches,
+        daily_visitors=daily,
+    )

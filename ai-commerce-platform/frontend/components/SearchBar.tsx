@@ -3,13 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { api } from "@/lib/api";
+
 export default function SearchBar() {
   const router = useRouter();
   const [q, setQ] = useState("");
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (q.trim()) router.push(`/products?q=${encodeURIComponent(q.trim())}`);
+    const term = q.trim();
+    if (!term) return;
+    api.track({ event_type: "search", query: term });
+    router.push(`/products?q=${encodeURIComponent(term)}`);
   };
 
   return (

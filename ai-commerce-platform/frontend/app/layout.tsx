@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
+import { Suspense } from "react";
+
 import "./globals.css";
 import AiAssistant from "@/components/AiAssistant";
 import Navbar from "@/components/Navbar";
+import Tracker from "@/components/Tracker";
 import { CartProvider } from "@/context/CartContext";
 
 export const metadata: Metadata = {
@@ -19,6 +22,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <body>
         <CartProvider>
+          <Suspense fallback={null}>
+            <Tracker />
+          </Suspense>
           <Navbar />
           <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
           <AiAssistant />

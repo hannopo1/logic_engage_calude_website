@@ -89,3 +89,19 @@ products.search_vector  → regenerated with 'simple' tsconfig (Arabic-friendly)
   cheapest active offer whose margin vs the selling price ≥ `MARGIN_MIN_PERCENT`.
 - One `purchase_order` per order item; the parent order's status is derived from its
   POs by `fulfillment_service.sync_order_status`.
+
+---
+
+## Phase 3 — merchant console (migration `0003`)
+
+```
+products  +column: fulfillment_type (dropship|own_stock)
+          own_stock items are fulfilled from the merchant's own inventory
+          (the sourcing agent opens a ready-to-ship PO, no supplier)
+
+analytics_events
+──────────────
+id (PK) · event_type (page_view|product_view|search|add_to_cart|begin_checkout|purchase)
+session_id · user_id → users.id · path · product_id → products.id · query · created_at
+```
+Written by the public `POST /events` endpoint (anonymous, keyed by X-Session-Id).

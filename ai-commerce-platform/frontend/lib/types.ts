@@ -137,3 +137,61 @@ export interface ApproveResult {
   result: string;
   package: PurchasePackage;
 }
+
+// ---------- Merchant console ----------
+
+export interface ProductAdmin {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  price: string;
+  cost_price?: string | null;
+  sku?: string | null;
+  stock_qty: number;
+  image?: string | null;
+  tags?: string | null;
+  category_id?: number | null;
+  fulfillment_type: string; // dropship | own_stock
+  is_active: boolean;
+  offer_count: number;
+}
+
+export interface Offer {
+  id: number;
+  product_id: number;
+  supplier_id: number;
+  url?: string | null;
+  external_sku?: string | null;
+  supplier_price: string;
+  shipping_cost: string;
+  currency: string;
+  lead_time_days: number;
+  is_active: boolean;
+}
+
+export interface Customer {
+  id: number;
+  email: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  created_at: string;
+  order_count: number;
+  total_spent: string;
+}
+
+export interface Analytics {
+  days: number;
+  unique_visitors: number;
+  page_views: number;
+  product_views: number;
+  searches: number;
+  add_to_cart: number;
+  orders: number;
+  conversion_rate: number;
+  funnel: { key: string; label: string; count: number }[];
+  top_products: { label: string; count: number }[];
+  top_searches: { label: string; count: number }[];
+  daily_visitors: { label: string; count: number }[];
+}

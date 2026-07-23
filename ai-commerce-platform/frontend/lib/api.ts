@@ -1,11 +1,15 @@
 import type {
+  Analytics,
   ApproveResult,
   Cart,
   Category,
   ChatResponse,
+  Customer,
   Dashboard,
+  Offer,
   Order,
   Product,
+  ProductAdmin,
   ProductList,
   PurchaseOrder,
   Supplier,
@@ -149,6 +153,47 @@ export const api = {
     }).then(handle<PurchaseOrder>),
   adminSuppliers: () =>
     fetch(`${API}/admin/suppliers`, { headers: headers(false) }).then(handle<Supplier[]>),
+
+  // Merchant console — products / customers / analytics
+  adminProducts: () =>
+    fetch(`${API}/admin/products`, { headers: headers(false) }).then(handle<ProductAdmin[]>),
+  adminCreateProduct: (body: Record<string, unknown>) =>
+    fetch(`${API}/admin/products`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<ProductAdmin>),
+  adminPatchProduct: (id: number, body: Record<string, unknown>) =>
+    fetch(`${API}/admin/products/${id}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<ProductAdmin>),
+  adminOffersFor: (productId: number) =>
+    fetch(`${API}/admin/offers?product_id=${productId}`, { headers: headers(false) }).then(
+      handle<Offer[]>,
+    ),
+  adminCreateOffer: (body: Record<string, unknown>) =>
+    fetch(`${API}/admin/offers`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<Offer>),
+  adminCustomers: () =>
+    fetch(`${API}/admin/customers`, { headers: headers(false) }).then(handle<Customer[]>),
+  adminAnalytics: (days = 30) =>
+    fetch(`${API}/admin/analytics?days=${days}`, { headers: headers(false) }).then(
+      handle<Analytics>,
+    ),
+
+  // Public analytics ingest (fire-and-forget)
+  track: (body: { event_type: string; path?: string; product_id?: number; query?: string }) =>
+    fetch(`${API}/events`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+      keepalive: true,
+    }).catch(() => {}),
 
   // Auth
   register: (body: { email: string; password: string; first_name?: string }) =>

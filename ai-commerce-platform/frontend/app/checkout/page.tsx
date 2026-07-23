@@ -21,8 +21,10 @@ export default function CheckoutPage() {
     e.preventDefault();
     setBusy(true);
     setError("");
+    api.track({ event_type: "begin_checkout" });
     try {
       const o = await api.checkoutWith(address, method);
+      api.track({ event_type: "purchase", path: `/orders/${o.id}` });
       setOrder(o);
       await refresh();
     } catch (err) {

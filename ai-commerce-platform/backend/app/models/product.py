@@ -23,6 +23,9 @@ class Product(Base):
     image: Mapped[str | None] = mapped_column(String(500))
     tags: Mapped[str | None] = mapped_column(String(500))  # comma-separated, used by recommender
     category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"))
+    # dropship: fulfilled by buying from a supplier (Amazon/Noon/…) per order.
+    # own_stock: fulfilled from the merchant's own inventory (no supplier PO).
+    fulfillment_type: Mapped[str] = mapped_column(String(20), default="dropship", nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     seo_title: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.order import Order, OrderItem
+from app.models.product import Product
 from app.models.purchase_order import PurchaseOrder, PurchaseOrderEvent
 from app.models.supplier import Supplier, SupplierOffer
 
@@ -71,6 +72,37 @@ def source_order(db: Session, order: Order, *, commit: bool = True) -> list[Purc
     for item in items:
         if item.product_id is None:
             continue
+
+        # Own-inventory items skip supplier sourcing: the merchant already holds
+        # the stock, so the PO is created ready to ship (no supplier, no buy step).
+        product = db.get(Product, item.product_id)
+        if product is not None and product.fulfillment_type == "own_stock":
+            cost = (
+                Decimal(str(product.cost_price)) * item.quantity
+                if product.cost_price is not None
+                else None
+            )
+            po = PurchaseOrder(
+                order_id=order.id,
+                order_item_id=item.id,
+                status="purchased",  # from own stock → ready to ship
+                quantity=item.quantity,
+                expected_cost=cost,
+                actual_cost=cost,
+            )
+            db.add(po)
+            db.flush()
+            db.add(
+                PurchaseOrderEvent(
+                    purchase_order_id=po.id,
+                    status="purchased",
+                    note="من مخزونك الخاص — جاهز للشحن مباشرة",
+                    actor="agent",
+                )
+            )
+            created.append(po)
+            continue
+
         offer, reason = pick_offer(db, item.product_id, Decimal(str(item.unit_price)))
         if offer is not None:
             po = PurchaseOrder(

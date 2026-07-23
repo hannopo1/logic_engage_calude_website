@@ -72,3 +72,23 @@ Every schema and example is available live in Swagger at `/docs`.
 | POST | `/admin/purchase-orders/{id}/ship` | `{tracking_no, carrier?}` |
 | POST | `/admin/purchase-orders/{id}/deliver` | mark delivered → order completed |
 | GET/POST/PATCH | `/admin/suppliers` · `/admin/offers` | manage suppliers & sourcing offers |
+
+---
+
+## Phase 3 — merchant console & analytics
+
+### Public
+| Method | Path | Notes |
+|--------|------|-------|
+| POST | `/events` | ingest a storefront analytics event (anonymous, X-Session-Id) |
+
+### Operator (admin role)
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/admin/products` | list all products (incl. inactive) with offer counts |
+| POST | `/admin/products` | create a product (dropship or own_stock; slug auto-derived) |
+| PATCH | `/admin/products/{id}` | edit price/stock/type/active/… |
+| GET | `/admin/offers?product_id=` | supplier offers for a product |
+| POST | `/admin/offers` | attach an Amazon/Noon/… offer (url + cost) |
+| GET | `/admin/customers` | customers with order count + total spent |
+| GET | `/admin/analytics?days=` | visitor funnel, top products/searches, conversion |

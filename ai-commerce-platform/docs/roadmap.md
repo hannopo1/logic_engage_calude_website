@@ -18,7 +18,12 @@ from the full product roadmap. Nothing here is built yet — it is the honest
 - Sanitized customer order-tracking timeline
 - COD checkout + pluggable payment-gateway layer (Paymob/Stripe-ready)
 
-## Phase 3 — Commerce depth (next)
+## Phase 3 — Merchant console + analytics ✅ (done)
+- Product management: add/edit products, attach Amazon/Noon supplier offers
+- Own-inventory mode (`fulfillment_type=own_stock`) alongside drop-ship
+- Customers view (orders + spend); built-in visitor analytics (funnel, top products/searches, conversion)
+
+## Phase 4 — Commerce depth (next)
 - **Payments:** wire a real gateway adapter (Paymob/Stripe) into the existing layer
 - **Official supplier connectors:** implement Amazon Business / Noon / Jumia partner APIs
 - **Shipping:** carrier integrations, rates, live tracking

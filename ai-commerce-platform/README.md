@@ -28,6 +28,8 @@ OLX Egypt and ship it to the customer — with a **human-approval gate** before 
 | **Drop-shipping** | Sourcing agent picks cheapest supplier meeting a margin floor → purchase order per item |
 | **Purchasing agent** | `assisted` (operator-approved) · `simulation` (auto, $0) · `api` (official connectors) |
 | **Operator console** | `/admin`: approve/reject POs, purchase package, mark purchased/shipped/delivered, dashboard |
+| **Merchant console** | `/admin` sections: products (add + attach Amazon/Noon offers), own-inventory mode, customers, analytics, suppliers |
+| **Visitor analytics** | Built-in funnel (visit→product→cart→checkout→purchase), top products/searches, conversion rate |
 | Order tracking | Sanitized Arabic timeline (no supplier/cost leakage) |
 | AI assistant | `/ai/chat` grounded in the catalog (Arabic; stub default, pluggable LLM) |
 | Recommendations | "Similar" (content) + "Also bought" (co-occurrence) |
