@@ -4,6 +4,8 @@ import type {
   Cart,
   Category,
   ChatResponse,
+  Coupon,
+  CouponValidation,
   Customer,
   Dashboard,
   Offer,
@@ -101,12 +103,18 @@ export const api = {
       headers: headers(),
       body: JSON.stringify({ shipping_address }),
     }).then(handle<Order>),
-  checkoutWith: (shipping_address: string, payment_method = "cod") =>
+  checkoutWith: (shipping_address: string, payment_method = "cod", coupon_code?: string) =>
     fetch(`${API}/orders`, {
       method: "POST",
       headers: headers(),
-      body: JSON.stringify({ shipping_address, payment_method }),
+      body: JSON.stringify({ shipping_address, payment_method, coupon_code: coupon_code || null }),
     }).then(handle<Order>),
+  validateCoupon: (code: string, subtotal: string) =>
+    fetch(`${API}/coupons/validate`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ code, subtotal }),
+    }).then(handle<CouponValidation>),
   myOrders: () =>
     fetch(`${API}/orders`, { headers: headers(false) }).then(handle<Order[]>),
   order: (id: number) =>
@@ -153,6 +161,20 @@ export const api = {
     }).then(handle<PurchaseOrder>),
   adminSuppliers: () =>
     fetch(`${API}/admin/suppliers`, { headers: headers(false) }).then(handle<Supplier[]>),
+  adminCoupons: () =>
+    fetch(`${API}/admin/coupons`, { headers: headers(false) }).then(handle<Coupon[]>),
+  adminCreateCoupon: (body: Record<string, unknown>) =>
+    fetch(`${API}/admin/coupons`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<Coupon>),
+  adminPatchCoupon: (id: number, body: Record<string, unknown>) =>
+    fetch(`${API}/admin/coupons/${id}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<Coupon>),
 
   // Merchant console — products / customers / analytics
   adminProducts: () =>

@@ -17,6 +17,8 @@ class Order(Base):
     payment_method: Mapped[str] = mapped_column(String(20), default="cod", nullable=False)  # cod|gateway
     payment_status: Mapped[str] = mapped_column(String(30), default="unpaid", nullable=False)
     total_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    discount_amount: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
+    coupon_code: Mapped[str | None] = mapped_column(String(40))
     shipping_address: Mapped[str | None] = mapped_column(Text)  # snapshot at checkout
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

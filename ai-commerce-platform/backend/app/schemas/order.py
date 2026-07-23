@@ -9,6 +9,7 @@ from pydantic import BaseModel
 class OrderCreate(BaseModel):
     shipping_address: str | None = None
     payment_method: str = "cod"  # cod | gateway
+    coupon_code: str | None = None
 
 
 class OrderItemOut(BaseModel):
@@ -27,6 +28,8 @@ class OrderOut(BaseModel):
     payment_method: str = "cod"
     payment_status: str
     total_amount: Decimal
+    discount_amount: Decimal = Decimal("0")
+    coupon_code: str | None = None
     shipping_address: str | None = None
     created_at: datetime
     items: list[OrderItemOut]

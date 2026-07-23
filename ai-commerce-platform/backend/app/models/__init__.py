@@ -7,3 +7,4 @@ from app.models.order import Order, OrderItem  # noqa: F401
 from app.models.supplier import Supplier, SupplierOffer  # noqa: F401
 from app.models.purchase_order import PurchaseOrder, PurchaseOrderEvent  # noqa: F401
 from app.models.analytics import AnalyticsEvent  # noqa: F401
+from app.models.coupon import Coupon  # noqa: F401

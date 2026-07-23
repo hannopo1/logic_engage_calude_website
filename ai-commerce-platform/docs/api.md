@@ -92,3 +92,22 @@ Every schema and example is available live in Swagger at `/docs`.
 | POST | `/admin/offers` | attach an Amazon/Noon/… offer (url + cost) |
 | GET | `/admin/customers` | customers with order count + total spent |
 | GET | `/admin/analytics?days=` | visitor funnel, top products/searches, conversion |
+
+---
+
+## Phase 4 — discount coupons
+
+### Public
+| Method | Path | Notes |
+|--------|------|-------|
+| POST | `/coupons/validate` | `{code, subtotal}` → `{code, kind, discount, new_total}`; 404/400 if invalid, inactive, expired, exhausted, or below `min_order` |
+| POST | `/orders` | now also accepts `{coupon_code}`; discount is re-validated & applied server-side, `used_count` incremented, payment authorized on the discounted total |
+
+`OrderOut` gains `discount_amount` and `coupon_code`.
+
+### Operator (admin role)
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/admin/coupons` | list all coupons (active + inactive) |
+| POST | `/admin/coupons` | create `{code, kind: percent\|fixed, value, min_order?, max_uses?, expires_at?}`; duplicate code → 409 |
+| PATCH | `/admin/coupons/{id}` | edit value/limits or toggle `is_active` |

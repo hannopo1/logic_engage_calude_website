@@ -17,6 +17,7 @@ from app.models.cart import Cart
 from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.user import User
+from app.services import coupon_service
 from app.services.payments import get_payment_provider
 
 
@@ -26,6 +27,7 @@ def create_order_from_cart(
     user: User | None,
     shipping_address: str | None,
     payment_method: str = "cod",
+    coupon_code: str | None = None,
 ) -> Order:
     if not cart.items:
         raise HTTPException(status_code=400, detail="السلة فارغة")
@@ -40,10 +42,19 @@ def create_order_from_cart(
                 detail=f"الكمية غير متاحة للمنتج '{it.product.name}' (المتاح {it.product.stock_qty}).",
             )
 
+    subtotal = sum(Decimal(str(it.product.price)) * it.quantity for it in cart.items)
+
+    # Optional discount coupon (validated against the subtotal).
+    discount = Decimal("0")
+    coupon = None
+    if coupon_code and coupon_code.strip():
+        coupon = coupon_service.find_valid(db, coupon_code, subtotal)
+        discount = coupon_service.compute_discount(coupon, subtotal)
+    payable = subtotal - discount
+
     # Authorize payment (COD always accepted; gateway declines until configured).
-    total_estimate = sum(Decimal(str(it.product.price)) * it.quantity for it in cart.items)
     payment = get_payment_provider(payment_method).authorize(
-        float(total_estimate), "EGP", {"user_id": user.id if user else None}
+        float(payable), "EGP", {"user_id": user.id if user else None}
     )
     if not payment.accepted:
         raise HTTPException(status_code=402, detail=payment.detail)
@@ -55,6 +66,8 @@ def create_order_from_cart(
         payment_method=payment.method,
         payment_status=payment.status,
         total_amount=Decimal("0"),
+        discount_amount=discount,
+        coupon_code=coupon.code if coupon else None,
         shipping_address=shipping_address,
     )
     db.add(order)
@@ -78,7 +91,10 @@ def create_order_from_cart(
         product: Product = it.product
         product.stock_qty -= it.quantity
 
-    order.total_amount = total
+    # Apply the discount to the order total and consume one coupon use.
+    order.total_amount = max(Decimal("0"), total - discount)
+    if coupon is not None:
+        coupon.used_count += 1
 
     # Empty the cart now that it has been converted.
     for it in list(cart.items):

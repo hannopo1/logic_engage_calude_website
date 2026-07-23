@@ -3,19 +3,21 @@
 import { useEffect, useState } from "react";
 
 import AnalyticsSection from "@/components/admin/AnalyticsSection";
+import CouponsSection from "@/components/admin/CouponsSection";
 import CustomersSection from "@/components/admin/CustomersSection";
 import OrdersSection from "@/components/admin/OrdersSection";
 import ProductsSection from "@/components/admin/ProductsSection";
 import SuppliersSection from "@/components/admin/SuppliersSection";
 import { api } from "@/lib/api";
 
-type Section = "orders" | "products" | "customers" | "analytics" | "suppliers";
+type Section = "orders" | "products" | "customers" | "analytics" | "coupons" | "suppliers";
 
 const NAV: { key: Section; label: string }[] = [
   { key: "orders", label: "الطلبات والتوريد" },
   { key: "products", label: "المنتجات" },
   { key: "customers", label: "العملاء" },
   { key: "analytics", label: "التحليلات" },
+  { key: "coupons", label: "أكواد الخصم" },
   { key: "suppliers", label: "الموردون" },
 ];
 
@@ -67,6 +69,7 @@ export default function AdminPage() {
       {section === "products" && <ProductsSection />}
       {section === "customers" && <CustomersSection />}
       {section === "analytics" && <AnalyticsSection />}
+      {section === "coupons" && <CouponsSection />}
       {section === "suppliers" && <SuppliersSection />}
     </div>
   );

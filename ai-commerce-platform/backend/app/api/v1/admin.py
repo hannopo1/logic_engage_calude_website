@@ -17,6 +17,7 @@ from app.api.deps import get_current_admin
 from app.core.database import get_db
 from app.core.utils import unique_slug
 from app.models.analytics import AnalyticsEvent
+from app.models.coupon import Coupon
 from app.models.order import Order
 from app.models.product import Product
 from app.models.purchase_order import PO_STATUSES, PurchaseOrder
@@ -36,6 +37,7 @@ from app.schemas.fulfillment import (
     SupplierOut,
     SupplierPatch,
 )
+from app.schemas.coupon import CouponIn, CouponOut, CouponPatch
 from app.schemas.merchant import (
     AnalyticsOut,
     CustomerOut,
@@ -446,3 +448,38 @@ def admin_analytics(days: int = Query(default=30, ge=1, le=365), db: Session = D
         top_searches=top_searches,
         daily_visitors=daily,
     )
+
+
+# ---------- coupons ----------
+
+@router.get("/coupons", response_model=list[CouponOut])
+def admin_list_coupons(db: Session = Depends(get_db)) -> list[Coupon]:
+    return list(db.scalars(select(Coupon).order_by(Coupon.created_at.desc())))
+
+
+@router.post("/coupons", response_model=CouponOut, status_code=201)
+def admin_create_coupon(payload: CouponIn, db: Session = Depends(get_db)) -> Coupon:
+    code = payload.code.strip().upper()
+    if db.scalar(select(Coupon).where(func.upper(Coupon.code) == code)):
+        raise HTTPException(status_code=409, detail="كود الخصم مستخدم بالفعل")
+    if payload.kind not in ("percent", "fixed"):
+        raise HTTPException(status_code=400, detail="نوع الخصم يجب أن يكون percent أو fixed")
+    data = payload.model_dump()
+    data["code"] = code
+    coupon = Coupon(**data)
+    db.add(coupon)
+    db.commit()
+    db.refresh(coupon)
+    return coupon
+
+
+@router.patch("/coupons/{coupon_id}", response_model=CouponOut)
+def admin_patch_coupon(coupon_id: int, payload: CouponPatch, db: Session = Depends(get_db)) -> Coupon:
+    coupon = db.get(Coupon, coupon_id)
+    if coupon is None:
+        raise HTTPException(status_code=404, detail="كود الخصم غير موجود")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(coupon, k, v)
+    db.commit()
+    db.refresh(coupon)
+    return coupon

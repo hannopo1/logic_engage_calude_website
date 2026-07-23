@@ -105,3 +105,23 @@ id (PK) · event_type (page_view|product_view|search|add_to_cart|begin_checkout|
 session_id · user_id → users.id · path · product_id → products.id · query · created_at
 ```
 Written by the public `POST /events` endpoint (anonymous, keyed by X-Session-Id).
+
+---
+
+## Phase 4 — discount coupons (migration `0004`)
+
+```
+coupons
+──────────────
+id (PK) · code (uniq) · kind (percent|fixed) · value · min_order
+max_uses · used_count · is_active · expires_at · created_at
+
+orders  +columns: discount_amount (default 0) · coupon_code
+```
+
+- A coupon is valid when active, not expired, under `max_uses`, and the cart
+  subtotal ≥ `min_order`. `POST /coupons/validate` previews the discount; the
+  discount is **re-computed and re-validated** at checkout, so the client value is
+  never trusted. `used_count` is incremented atomically when the order is placed.
+- `orders.total_amount` stores the **discounted** total; `discount_amount` and
+  `coupon_code` record what was applied for the receipt and reporting.

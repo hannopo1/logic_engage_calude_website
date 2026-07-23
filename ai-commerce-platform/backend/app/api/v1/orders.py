@@ -25,7 +25,7 @@ def create_order(
 ) -> Order:
     cart = cart_service.get_or_create_cart(db, user, x_session_id)
     return order_service.create_order_from_cart(
-        db, cart, user, payload.shipping_address, payload.payment_method
+        db, cart, user, payload.shipping_address, payload.payment_method, payload.coupon_code
     )
 
 

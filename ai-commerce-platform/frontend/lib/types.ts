@@ -46,6 +46,8 @@ export interface Order {
   payment_method?: string;
   payment_status: string;
   total_amount: string;
+  discount_amount?: string | null;
+  coupon_code?: string | null;
   shipping_address?: string | null;
   created_at: string;
   items: {
@@ -194,4 +196,23 @@ export interface Analytics {
   top_products: { label: string; count: number }[];
   top_searches: { label: string; count: number }[];
   daily_visitors: { label: string; count: number }[];
+}
+
+export interface Coupon {
+  id: number;
+  code: string;
+  kind: string; // percent | fixed
+  value: string;
+  min_order: string;
+  max_uses?: number | null;
+  used_count: number;
+  is_active: boolean;
+  expires_at?: string | null;
+}
+
+export interface CouponValidation {
+  code: string;
+  kind: string;
+  discount: string;
+  new_total: string;
 }

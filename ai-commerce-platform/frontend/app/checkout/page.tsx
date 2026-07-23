@@ -17,13 +17,37 @@ export default function CheckoutPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discount: string; new_total: string } | null>(null);
+  const [couponMsg, setCouponMsg] = useState("");
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code || !cart) return;
+    setCouponMsg("");
+    try {
+      const res = await api.validateCoupon(code, cart.subtotal);
+      setCoupon(res);
+      setCouponMsg(`تم تطبيق الكود — خصم ${fmtEGP(res.discount)}`);
+    } catch (err) {
+      setCoupon(null);
+      setCouponMsg((err as Error).message);
+    }
+  };
+  const clearCoupon = () => {
+    setCoupon(null);
+    setCouponInput("");
+    setCouponMsg("");
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError("");
     api.track({ event_type: "begin_checkout" });
     try {
-      const o = await api.checkoutWith(address, method);
+      const o = await api.checkoutWith(address, method, coupon?.code);
       api.track({ event_type: "purchase", path: `/orders/${o.id}` });
       setOrder(o);
       await refresh();
@@ -35,9 +59,16 @@ export default function CheckoutPage() {
   };
 
   if (order) {
+    const hasDiscount = order.discount_amount && Number(order.discount_amount) > 0;
     return (
       <div className="space-y-4 text-center">
         <h1 className="text-2xl font-bold text-green-700">تم تأكيد الطلب ✓</h1>
+        {hasDiscount && (
+          <p className="text-sm text-green-700">
+            كود الخصم <strong>{order.coupon_code}</strong> — وفّرت{" "}
+            <strong>{fmtEGP(order.discount_amount!)}</strong>
+          </p>
+        )}
         <p>
           طلب رقم <strong>#{order.id}</strong> — الإجمالي{" "}
           <strong>{fmtEGP(order.total_amount)}</strong>
@@ -106,6 +137,61 @@ export default function CheckoutPage() {
             </label>
           </div>
         </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium">كود الخصم (اختياري)</label>
+          {coupon ? (
+            <div className="flex items-center justify-between rounded-md border border-green-300 bg-green-50 p-3">
+              <span className="text-sm text-green-800">
+                <strong>{coupon.code}</strong> — خصم {fmtEGP(coupon.discount)}
+              </span>
+              <button
+                type="button"
+                onClick={clearCoupon}
+                className="text-sm font-medium text-red-600 hover:underline"
+              >
+                إزالة
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value)}
+                placeholder="مثال: WELCOME10"
+                className="flex-1 rounded-md border border-stone-300 p-3 outline-none focus:border-brand"
+              />
+              <button
+                type="button"
+                onClick={applyCoupon}
+                disabled={!couponInput.trim() || !cart}
+                className="rounded-md border border-brand px-4 font-semibold text-brand disabled:opacity-50"
+              >
+                تطبيق
+              </button>
+            </div>
+          )}
+          {couponMsg && (
+            <p className={`mt-1 text-sm ${coupon ? "text-green-700" : "text-red-600"}`}>{couponMsg}</p>
+          )}
+        </div>
+
+        {cart && coupon && (
+          <div className="space-y-1 rounded-md bg-stone-50 p-3 text-sm">
+            <div className="flex justify-between">
+              <span>الإجمالي الفرعي</span>
+              <span>{fmtEGP(cart.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-green-700">
+              <span>الخصم</span>
+              <span>− {fmtEGP(coupon.discount)}</span>
+            </div>
+            <div className="flex justify-between border-t border-stone-200 pt-1 font-bold">
+              <span>الإجمالي بعد الخصم</span>
+              <span className="text-brand">{fmtEGP(coupon.new_total)}</span>
+            </div>
+          </div>
+        )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
