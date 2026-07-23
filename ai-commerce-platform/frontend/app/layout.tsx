@@ -6,8 +6,8 @@ import Navbar from "@/components/Navbar";
 import { CartProvider } from "@/context/CartContext";
 
 export const metadata: Metadata = {
-  title: "CaveBrew — Specialty Coffee & Brewing Gear",
-  description: "AI-powered specialty coffee store. Modular headless commerce MVP.",
+  title: "كيڤ برو — قهوة مختصة وأدوات تحضير",
+  description: "متجر قهوة مختصة مدعوم بالذكاء الاصطناعي — توصيل لكل مصر، الدفع عند الاستلام.",
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="ar" dir="rtl">
       <body>
         <CartProvider>
           <Navbar />

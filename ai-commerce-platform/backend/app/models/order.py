@@ -14,6 +14,7 @@ class Order(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True)
     status: Mapped[str] = mapped_column(String(30), default="pending", nullable=False)
+    payment_method: Mapped[str] = mapped_column(String(20), default="cod", nullable=False)  # cod|gateway
     payment_status: Mapped[str] = mapped_column(String(30), default="unpaid", nullable=False)
     total_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     shipping_address: Mapped[str | None] = mapped_column(Text)  # snapshot at checkout

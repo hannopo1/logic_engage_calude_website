@@ -27,12 +27,13 @@ class Product(Base):
     seo_title: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    # Populated by a Postgres STORED generated column (see migration 0001).
+    # Populated by a Postgres STORED generated column (migrations 0001/0002).
     # Declared Computed so the ORM never tries to INSERT/UPDATE it.
+    # 'simple' config = neutral tokenizer, Arabic-friendly.
     search_vector: Mapped[str | None] = mapped_column(
         TSVECTOR,
         Computed(
-            "to_tsvector('english', "
+            "to_tsvector('simple', "
             "coalesce(name, '') || ' ' || "
             "coalesce(description, '') || ' ' || "
             "coalesce(tags, ''))",

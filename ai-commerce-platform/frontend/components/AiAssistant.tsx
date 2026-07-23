@@ -15,7 +15,7 @@ export default function AiAssistant() {
     {
       role: "assistant",
       content:
-        "Hi! I'm your shopping assistant. Ask me about our coffee gear — e.g. \"a grinder for espresso under $200\".",
+        "أهلاً! أنا مساعد التسوّق. اسألني عن أدوات القهوة — مثلاً «مطحنة للإسبريسو تحت 5000 جنيه».",
     },
   ]);
   const [input, setInput] = useState("");
@@ -47,13 +47,13 @@ export default function AiAssistant() {
         onClick={() => setOpen((o) => !o)}
         className="fixed bottom-5 right-5 z-50 rounded-full bg-brand px-5 py-3 font-semibold text-white shadow-lg hover:bg-brand-dark"
       >
-        {open ? "Close" : "💬 Ask AI"}
+        {open ? "إغلاق" : "💬 اسأل المساعد"}
       </button>
 
       {open && (
         <div className="fixed bottom-20 right-5 z-50 flex h-[28rem] w-80 flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-2xl">
           <div className="bg-brand px-4 py-3 font-semibold text-white">
-            Shopping Assistant
+            مساعد التسوّق
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto p-3 text-sm">
             {msgs.map((m, i) => (
@@ -72,14 +72,14 @@ export default function AiAssistant() {
                 </span>
               </div>
             ))}
-            {busy && <div className="text-stone-400">Thinking…</div>}
+            {busy && <div className="text-stone-400">جارٍ التفكير…</div>}
           </div>
           <div className="flex gap-2 border-t border-stone-200 p-2">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Type a question…"
+              placeholder="اكتب سؤالك…"
               className="flex-1 rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-brand"
             />
             <button
@@ -87,7 +87,7 @@ export default function AiAssistant() {
               disabled={busy}
               className="rounded-md bg-brand px-3 text-sm font-semibold text-white disabled:opacity-50"
             >
-              Send
+              إرسال
             </button>
           </div>
         </div>

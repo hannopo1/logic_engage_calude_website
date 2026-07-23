@@ -4,19 +4,27 @@ This repo delivers **Phase 1 (MVP foundation)**. Below is what comes next, drawn
 from the full product roadmap. Nothing here is built yet — it is the honest
 "not-done" list plus the intended sequence.
 
-## Phase 1 — MVP foundation ✅ (this repo)
+## Phase 1 — MVP foundation ✅ (done)
 - Auth, catalog, full-text search, cart, checkout, orders
 - Pluggable AI assistant (stub → real LLM), content + co-occurrence recommenders
 - Dockerized monorepo, migrations, seed catalog, docs
 
-## Phase 2 — Commerce depth
-- **Payments:** real gateway integration (tokenized, PCI-aware) replacing the
-  simulated cash-on-delivery checkout
-- **Shipping:** providers, rates, tracking (`shipments` table)
+## Phase 2 — Launch-ready drop-shipping (Egypt) ✅ (done)
+- Arabic RTL storefront, EGP pricing, Arabic-friendly full-text search
+- Zero-inventory model: suppliers + offers, sourcing agent with margin floor
+- Purchasing agent — `assisted` (operator-approved) / `simulation` / `api` modes
+- Compliant connectors (official-API-only; OLX manual), no ToS-violating scraping
+- Operator console (`/admin`): PO lifecycle, purchase package, dashboard
+- Sanitized customer order-tracking timeline
+- COD checkout + pluggable payment-gateway layer (Paymob/Stripe-ready)
+
+## Phase 3 — Commerce depth (next)
+- **Payments:** wire a real gateway adapter (Paymob/Stripe) into the existing layer
+- **Official supplier connectors:** implement Amazon Business / Noon / Jumia partner APIs
+- **Shipping:** carrier integrations, rates, live tracking
 - **Reviews & ratings**, **wishlist**, **addresses**, **coupons/promotions**
-- **Inventory:** movement log (`inventory_log`), low-stock alerts
-- **Admin portal:** product/order/customer management, RBAC
-- **Order lifecycle:** `order_status_history`, notifications (email/WhatsApp)
+- **Notifications:** order updates via email / WhatsApp
+- **Auto-restock offers:** scheduled supplier price/availability refresh
 
 ## Phase 3 — Intelligence
 - **Semantic search:** add a `pgvector` embedding column; hybrid keyword + vector

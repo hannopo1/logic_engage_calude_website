@@ -49,3 +49,26 @@ Send `X-Session-Id` (guest) or `Authorization` (user).
 | GET | `/` | service info |
 
 Every schema and example is available live in Swagger at `/docs`.
+
+---
+
+## Phase 2 — fulfillment & operator API
+
+### Customer
+| Method | Path | Notes |
+|--------|------|-------|
+| POST | `/orders` | now accepts `{payment_method}` (cod default; gateway declines until configured) |
+| GET | `/orders/{id}/timeline` | sanitized Arabic fulfillment steps (no supplier/cost data) |
+
+### Operator (admin role required — 403 otherwise)
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/admin/dashboard` | PO counts by status, orders today, revenue, est. margin |
+| GET | `/admin/purchase-orders?status=` | list POs (denormalized for the console) |
+| POST | `/admin/purchase-orders/{id}/approve` | hand to purchasing agent → purchase package |
+| POST | `/admin/purchase-orders/{id}/reject` | `{note, cancel}` → cancel or back to sourcing |
+| POST | `/admin/purchase-orders/{id}/resource` | re-run sourcing for a pending PO |
+| POST | `/admin/purchase-orders/{id}/mark-purchased` | `{supplier_order_ref, actual_cost?}` |
+| POST | `/admin/purchase-orders/{id}/ship` | `{tracking_no, carrier?}` |
+| POST | `/admin/purchase-orders/{id}/deliver` | mark delivered → order completed |
+| GET/POST/PATCH | `/admin/suppliers` · `/admin/offers` | manage suppliers & sourcing offers |

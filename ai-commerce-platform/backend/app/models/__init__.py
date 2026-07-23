@@ -4,3 +4,5 @@ from app.models.category import Category  # noqa: F401
 from app.models.product import Product  # noqa: F401
 from app.models.cart import Cart, CartItem  # noqa: F401
 from app.models.order import Order, OrderItem  # noqa: F401
+from app.models.supplier import Supplier, SupplierOffer  # noqa: F401
+from app.models.purchase_order import PurchaseOrder, PurchaseOrderEvent  # noqa: F401

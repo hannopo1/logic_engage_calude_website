@@ -47,7 +47,7 @@ function ProductsInner() {
             !category ? "border-brand bg-brand text-white" : "border-stone-300"
           }`}
         >
-          All
+          الكل
         </a>
         {categories.map((c) => (
           <a
@@ -65,13 +65,13 @@ function ProductsInner() {
       </div>
 
       <h1 className="text-xl font-semibold">
-        {q ? `Results for “${q}”` : "All products"}
+        {q ? `نتائج البحث عن «${q}»` : "كل المنتجات"}
       </h1>
 
       {loading ? (
-        <p className="text-stone-500">Loading…</p>
+        <p className="text-stone-500">جارٍ التحميل…</p>
       ) : products.length === 0 ? (
-        <p className="text-stone-500">No products found.</p>
+        <p className="text-stone-500">لا توجد منتجات مطابقة.</p>
       ) : (
         <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
           {products.map((p) => (
@@ -85,7 +85,7 @@ function ProductsInner() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<p className="text-stone-500">Loading…</p>}>
+    <Suspense fallback={<p className="text-stone-500">جارٍ التحميل…</p>}>
       <ProductsInner />
     </Suspense>
   );

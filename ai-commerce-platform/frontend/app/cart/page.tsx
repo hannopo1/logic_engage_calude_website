@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { useCart } from "@/context/CartContext";
+import { fmtEGP } from "@/lib/format";
 
 export default function CartPage() {
   const { cart, update, remove } = useCart();
@@ -10,10 +11,10 @@ export default function CartPage() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Your cart</h1>
-        <p className="text-stone-500">Your cart is empty.</p>
+        <h1 className="text-2xl font-bold">سلة التسوق</h1>
+        <p className="text-stone-500">سلتك فارغة.</p>
         <Link href="/products" className="text-brand underline">
-          Browse products
+          تصفّح المنتجات
         </Link>
       </div>
     );
@@ -21,7 +22,7 @@ export default function CartPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Your cart</h1>
+      <h1 className="text-2xl font-bold">سلة التسوق</h1>
       <div className="divide-y divide-stone-200 rounded-lg border border-stone-200 bg-white">
         {cart.items.map((it) => (
           <div key={it.id} className="flex items-center gap-4 p-4">
@@ -30,7 +31,7 @@ export default function CartPage() {
             </div>
             <div className="flex-1">
               <p className="font-medium">{it.product.name}</p>
-              <p className="text-sm text-stone-500">${it.product.price} each</p>
+              <p className="text-sm text-stone-500">{fmtEGP(it.product.price)} للقطعة</p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -47,12 +48,12 @@ export default function CartPage() {
                 +
               </button>
             </div>
-            <div className="w-20 text-right font-semibold">${it.line_total}</div>
+            <div className="w-24 text-left font-semibold">{fmtEGP(it.line_total)}</div>
             <button
               onClick={() => remove(it.product.id)}
               className="text-sm text-red-600 hover:underline"
             >
-              Remove
+              حذف
             </button>
           </div>
         ))}
@@ -60,14 +61,14 @@ export default function CartPage() {
 
       <div className="flex items-center justify-between">
         <span className="text-lg">
-          Subtotal:{" "}
-          <span className="font-bold text-brand">${cart.subtotal}</span>
+          الإجمالي:{" "}
+          <span className="font-bold text-brand">{fmtEGP(cart.subtotal)}</span>
         </span>
         <Link
           href="/checkout"
           className="rounded-md bg-brand px-6 py-3 font-semibold text-white hover:bg-brand-dark"
         >
-          Checkout
+          إتمام الشراء
         </Link>
       </div>
     </div>

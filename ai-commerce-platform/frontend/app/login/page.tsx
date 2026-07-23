@@ -37,7 +37,7 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-sm space-y-6">
       <h1 className="text-2xl font-bold">
-        {mode === "login" ? "Sign in" : "Create account"}
+        {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب"}
       </h1>
       <form onSubmit={submit} className="space-y-4">
         <input
@@ -45,7 +45,7 @@ export default function LoginPage() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
+          placeholder="البريد الإلكتروني"
           className="w-full rounded-md border border-stone-300 p-3 outline-none focus:border-brand"
         />
         <input
@@ -53,7 +53,7 @@ export default function LoginPage() {
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          placeholder="كلمة المرور"
           className="w-full rounded-md border border-stone-300 p-3 outline-none focus:border-brand"
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -61,7 +61,7 @@ export default function LoginPage() {
           disabled={busy}
           className="w-full rounded-md bg-brand py-3 font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
         >
-          {busy ? "…" : mode === "login" ? "Sign in" : "Register"}
+          {busy ? "…" : mode === "login" ? "دخول" : "تسجيل"}
         </button>
       </form>
       <button
@@ -69,11 +69,11 @@ export default function LoginPage() {
         className="text-sm text-brand underline"
       >
         {mode === "login"
-          ? "Need an account? Register"
-          : "Have an account? Sign in"}
+          ? "ليس لديك حساب؟ سجّل الآن"
+          : "لديك حساب؟ سجّل الدخول"}
       </button>
       <p className="text-xs text-stone-400">
-        Demo account prefilled: demo@example.com / demo1234
+        حساب تجريبي: demo@example.com / demo1234 — للإدارة: admin@example.com / admin1234
       </p>
     </div>
   );

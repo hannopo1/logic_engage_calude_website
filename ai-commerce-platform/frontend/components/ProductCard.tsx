@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { useCart } from "@/context/CartContext";
+import { fmtEGP } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -29,7 +30,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="p-4">
           <h3 className="line-clamp-2 min-h-[2.5rem] font-medium">{product.name}</h3>
-          <p className="mt-1 text-lg font-bold text-brand">${product.price}</p>
+          <p className="mt-1 text-lg font-bold text-brand">{fmtEGP(product.price)}</p>
         </div>
       </Link>
       <div className="mt-auto p-4 pt-0">
@@ -38,7 +39,7 @@ export default function ProductCard({ product }: { product: Product }) {
           disabled={busy || product.stock_qty <= 0}
           className="w-full rounded-md bg-brand py-2 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
         >
-          {product.stock_qty <= 0 ? "Out of stock" : busy ? "Adding…" : "Add to cart"}
+          {product.stock_qty <= 0 ? "غير متوفر" : busy ? "جارٍ الإضافة…" : "أضف للسلة"}
         </button>
       </div>
     </div>

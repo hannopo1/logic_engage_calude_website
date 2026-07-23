@@ -43,15 +43,15 @@ class StubProvider(AIProvider):
 
         if not top:
             return (
-                "I couldn't find a close match in our catalog for that. "
-                "Try naming a product type, a use case, or a budget and I'll suggest options. "
-                "(Assistant running in offline demo mode — add an API key to enable full AI.)"
+                "لم أجد تطابقاً قريباً في الكتالوج لطلبك. "
+                "جرّب ذكر نوع المنتج أو الاستخدام أو ميزانيتك وسأقترح خيارات. "
+                "(المساعد يعمل في وضع تجريبي بلا اتصال — أضف مفتاح API لتفعيل الذكاء الكامل.)"
             )
 
         bullet = "\n".join(f"• {line}" for line in top)
         return (
-            "Here's what I found that matches your request:\n\n"
+            "هذا ما وجدته مطابقاً لطلبك:\n\n"
             f"{bullet}\n\n"
-            "Want more detail on any of these, or a comparison? "
-            "(Assistant running in offline demo mode — add an API key to enable full AI.)"
+            "تريد تفاصيل أكثر عن أي منها أو مقارنة بينها؟ "
+            "(المساعد يعمل في وضع تجريبي بلا اتصال — أضف مفتاح API لتفعيل الذكاء الكامل.)"
         )

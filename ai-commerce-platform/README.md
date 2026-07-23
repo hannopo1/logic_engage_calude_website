@@ -1,12 +1,18 @@
-# AI Commerce Platform — MVP Foundation
+# AI Commerce Platform — Drop-shipping Store (Egypt)
 
-An **AI-first, modular, headless** e-commerce platform. This repository is the
-**Phase-1 MVP foundation**: a runnable monorepo you can start with one command and
-grow toward the full roadmap (payments, marketplace, mobile, advanced AI).
+An **AI-first, modular, headless** e-commerce platform running a **zero-inventory
+drop-shipping** model for the Egyptian market: an Arabic (RTL) storefront priced in
+EGP, and **purchasing agents** that source each sold item from Jumia / Amazon / Noon /
+OLX Egypt and ship it to the customer — with a **human-approval gate** before any buy.
 
-> Built to be **zero-budget**: every component is open-source, and the AI assistant
-> works with **no API key** (a grounded stub). Add an Anthropic/OpenAI key later to
-> switch to a real LLM — no code changes.
+> Zero-budget by design: every component is open-source; the AI assistant works with
+> **no API key** (a grounded stub), and the store launches on **cash-on-delivery** with
+> no payment-gateway account required.
+
+> **Compliance:** the platform never scripts/scrapes a supplier's checkout (ToS/ban
+> risk). Agents automate everything up to the purchase, then an operator confirms.
+> Full automation is available only through official supplier APIs — see
+> [`docs/dropshipping.md`](docs/dropshipping.md).
 
 ---
 
@@ -14,19 +20,22 @@ grow toward the full roadmap (payments, marketplace, mobile, advanced AI).
 
 | Area | Feature |
 |------|---------|
-| Auth | Register / login (JWT), `GET /me` |
-| Catalog | Categories, products (filter + pagination), product detail |
-| Search | PostgreSQL full-text search (`tsvector` + GIN) with natural phrases |
-| Cart | Add / update / remove; works for guests (session) and logged-in users |
-| Checkout | Cart → order, atomic stock check + decrement |
-| Orders | Order history, order detail |
-| AI assistant | `/ai/chat` grounded in the catalog (stub by default, pluggable to a real LLM) |
-| Recommendations | "Similar products" (content-based) + "Customers also bought" (co-occurrence) |
-| Docs | Auto-generated OpenAPI/Swagger at `/docs` |
+| Storefront | Arabic RTL, EGP pricing, home / catalog / product / cart |
+| Auth | Register / login (JWT), roles (customer / operator) |
+| Search | PostgreSQL full-text (Arabic-friendly `simple` config) + GIN |
+| Cart | Guest (session) + user carts |
+| Checkout | Cash-on-delivery; pluggable gateway layer (Paymob/Stripe-ready) |
+| **Drop-shipping** | Sourcing agent picks cheapest supplier meeting a margin floor → purchase order per item |
+| **Purchasing agent** | `assisted` (operator-approved) · `simulation` (auto, $0) · `api` (official connectors) |
+| **Operator console** | `/admin`: approve/reject POs, purchase package, mark purchased/shipped/delivered, dashboard |
+| Order tracking | Sanitized Arabic timeline (no supplier/cost leakage) |
+| AI assistant | `/ai/chat` grounded in the catalog (Arabic; stub default, pluggable LLM) |
+| Recommendations | "Similar" (content) + "Also bought" (co-occurrence) |
+| Docs | Auto OpenAPI/Swagger at `/docs` |
 
-Deferred to later phases (documented in [`docs/roadmap.md`](docs/roadmap.md)):
-real payments, shipping, reviews, wishlist, coupons, multi-vendor, mobile apps,
-semantic (pgvector) search, demand forecasting.
+Deferred (see [`docs/roadmap.md`](docs/roadmap.md) & [`docs/launch.md`](docs/launch.md)):
+live payment gateway, official supplier API connectors, reviews/wishlist/coupons,
+mobile apps, semantic (pgvector) search, demand forecasting.
 
 ---
 
@@ -37,14 +46,19 @@ Requires Docker + Docker Compose.
 ```bash
 cp .env.example .env      # optional; `make up` does this for you
 make up                   # build + start db, redis, backend, frontend
-make seed                 # load the demo coffee catalog
+make seed                 # load the demo Arabic/EGP catalog + suppliers
 ```
 
 Then open:
 - **Storefront:** http://localhost:3000
+- **Operator console:** http://localhost:3000/admin
 - **API + Swagger docs:** http://localhost:8000/docs
 
-Demo account: `demo@example.com` / `demo1234`.
+Demo logins — customer: `demo@example.com` / `demo1234` · operator: `admin@example.com` / `admin1234`.
+
+Try the full loop: buy something (COD) → open `/admin` → approve the auto-created
+purchase order → follow the purchase package → mark purchased → ship → deliver.
+Set `AGENT_MODE=simulation` in `.env` to auto-execute purchases for a hands-off demo.
 
 Stop with `make down`. See `make help` for all targets.
 

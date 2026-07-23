@@ -43,6 +43,7 @@ export interface Cart {
 export interface Order {
   id: number;
   status: string;
+  payment_method?: string;
   payment_status: string;
   total_amount: string;
   shipping_address?: string | null;
@@ -60,4 +61,79 @@ export interface ChatResponse {
   reply: string;
   provider: string;
   products: Product[];
+}
+
+// ---------- Drop-shipping / fulfillment ----------
+
+export interface TimelineStep {
+  status: string;
+  label: string;
+  at?: string | null;
+  done: boolean;
+}
+
+export interface POEvent {
+  status: string;
+  note?: string | null;
+  actor: string;
+  created_at: string;
+}
+
+export interface PurchaseOrder {
+  id: number;
+  order_id: number;
+  order_item_id: number;
+  supplier_offer_id?: number | null;
+  status: string;
+  quantity: number;
+  expected_cost?: string | null;
+  actual_cost?: string | null;
+  supplier_order_ref?: string | null;
+  tracking_no?: string | null;
+  carrier?: string | null;
+  created_at: string;
+  product_name?: string | null;
+  supplier_name?: string | null;
+  supplier_url?: string | null;
+  customer_address?: string | null;
+  selling_total?: string | null;
+  events: POEvent[];
+}
+
+export interface Supplier {
+  id: number;
+  name: string;
+  slug: string;
+  kind: string;
+  region: string;
+  mode: string;
+  website?: string | null;
+  notes?: string | null;
+  is_active: boolean;
+}
+
+export interface Dashboard {
+  po_counts: Record<string, number>;
+  orders_today: number;
+  revenue_total: string;
+  expected_cost_open: string;
+  estimated_margin_percent?: number | null;
+}
+
+export interface PurchasePackage {
+  purchase_order_id: number;
+  supplier?: string | null;
+  product_url?: string | null;
+  quantity: number;
+  max_unit_price?: string | null;
+  expected_total_cost?: string | null;
+  currency: string;
+  ship_to_address?: string | null;
+  instructions: string;
+}
+
+export interface ApproveResult {
+  mode: string;
+  result: string;
+  package: PurchasePackage;
 }

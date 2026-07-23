@@ -23,27 +23,27 @@ export default function Home() {
   return (
     <div className="space-y-10">
       <section className="flex flex-col items-center gap-6 rounded-2xl bg-gradient-to-br from-brand to-brand-dark px-6 py-16 text-center text-white">
-        <h1 className="text-4xl font-bold">Brew better coffee.</h1>
+        <h1 className="text-4xl font-bold">اصنع قهوة أفضل.</h1>
         <p className="max-w-xl text-white/90">
-          Specialty beans and precision gear — with an AI assistant that helps you
-          pick exactly what you need.
+          بن مختص وأدوات دقيقة — مع مساعد ذكي يساعدك تختار بالضبط اللي محتاجه.
+          توصيل لكل مصر والدفع عند الاستلام.
         </p>
         <SearchBar />
         <Link
           href="/products"
           className="rounded-full bg-white px-6 py-3 font-semibold text-brand hover:bg-stone-100"
         >
-          Shop all products
+          تصفّح كل المنتجات
         </Link>
       </section>
 
       <section>
-        <h2 className="mb-4 text-2xl font-bold">Featured</h2>
+        <h2 className="mb-4 text-2xl font-bold">منتجات مميزة</h2>
         {loading ? (
-          <p className="text-stone-500">Loading…</p>
+          <p className="text-stone-500">جارٍ التحميل…</p>
         ) : featured.length === 0 ? (
           <p className="text-stone-500">
-            No products yet. Run <code>make seed</code> to load the demo catalog.
+            لا توجد منتجات بعد. شغّل <code>make seed</code> لتحميل الكتالوج التجريبي.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-5 md:grid-cols-4">

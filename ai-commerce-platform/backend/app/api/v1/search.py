@@ -23,7 +23,8 @@ def search_products(
     work without special syntax. Ranked by ts_rank; falls back to ILIKE if the
     tsquery yields nothing (e.g. very short/partial tokens).
     """
-    tsquery = func.websearch_to_tsquery("english", q)
+    # 'simple' config: neutral tokenizer, correct for the Arabic catalog.
+    tsquery = func.websearch_to_tsquery("simple", q)
     stmt = (
         select(Product)
         .where(Product.is_active.is_(True), Product.search_vector.op("@@")(tsquery))

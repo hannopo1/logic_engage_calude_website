@@ -63,3 +63,30 @@ Add a new domain (e.g. reviews):
    `app/api/v1/__init__.py`.
 
 The modular boundaries mean new modules do not touch existing ones.
+
+---
+
+## Phase 2 — drop-shipping agent layer
+
+```
+checkout (order_service.create_order_from_cart)
+   └─▶ agents/sourcing.source_order   ← runs in the same transaction as the order
+          picks cheapest supplier offer ≥ margin floor → PurchaseOrder(awaiting_approval)
+                                                       ↘ no viable offer → pending_sourcing
+
+operator /admin ──approve──▶ agents/purchasing.execute_purchase
+   ├─ assisted  → build purchase package (link, qty, max price, customer address) → hold
+   ├─ simulation→ SimulationConnector → purchased (fake ref, $0)
+   └─ api       → official connector (agents/connectors.py) or fall back to assisted
+
+services/fulfillment_service.transition  ← single owner of PO state-machine rules
+   └─ sync_order_status()  reflects PO progress onto the customer order
+```
+
+- **Compliance boundary:** `agents/connectors.py` never scripts a retail checkout.
+  Marketplace connectors are official-API stubs that raise `NotConfiguredError` until
+  real credentials are implemented; OLX has no connector (manual only).
+- **Payments:** `services/payments.py` — `CODProvider` (default) + `GatewayStubProvider`
+  (documents the Paymob/Stripe adapter contract). Swapped via `PAYMENT_PROVIDER`.
+- **Customer isolation:** `/orders/{id}/timeline` exposes only sanitized stages; supplier
+  identity, costs, and margins never leave the operator surface.

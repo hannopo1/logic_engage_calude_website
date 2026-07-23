@@ -17,7 +17,7 @@ export default function SearchBar() {
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search e.g. 'burr grinder for espresso'…"
+        placeholder="ابحث مثلاً: 'مطحنة قهوة للإسبريسو'…"
         className="w-full rounded-full border border-stone-300 px-5 py-3 outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
       />
     </form>

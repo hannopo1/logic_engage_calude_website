@@ -29,9 +29,10 @@ def _build_context(db: Session) -> tuple[str, list[Product]]:
         for p in products
     ]
     policies = [
-        "Returns accepted within 14 days of delivery for unused items.",
-        "Standard shipping 2-4 business days; free over 200.",
-        "Payment on delivery and card payments are supported.",
+        "الإرجاع مقبول خلال 14 يوماً من الاستلام للمنتجات غير المستخدمة.",
+        "الشحن القياسي 2-5 أيام عمل داخل مصر.",
+        "الدفع عند الاستلام (كاش) متاح لكل الطلبات.",
+        "الأسعار بالجنيه المصري وتشمل كل الرسوم.",
     ]
     context = "PRODUCTS:\n" + "\n".join(lines) + "\n\nPOLICIES:\n" + "\n".join(policies)
     return context, products

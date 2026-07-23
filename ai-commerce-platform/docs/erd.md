@@ -58,3 +58,34 @@ total_price
 `inventory_log`, `order_status_history`, `analytics_events`, and a `pgvector`
 embedding column for semantic search. The modular schema admits these as additive
 migrations without altering existing tables.
+
+---
+
+## Phase 2 — drop-shipping tables (migration `0002`)
+
+```
+suppliers                  supplier_offers            purchase_orders
+──────────────             ──────────────             ──────────────
+id (PK)                    id (PK)                    id (PK)
+name                       product_id → products.id   order_id → orders.id
+slug (uniq)                supplier_id → suppliers.id  order_item_id → order_items.id
+kind (marketplace|         url                        supplier_offer_id → supplier_offers.id
+      classifieds)         external_sku               status  ← PO state machine
+region (EG)                supplier_price             quantity
+mode (manual|              shipping_cost              expected_cost / actual_cost
+      assisted|api)        currency (EGP)             supplier_order_ref
+website                    lead_time_days             tracking_no / carrier
+is_active                  is_active                  created_at / updated_at
+
+purchase_order_events (append-only audit)
+──────────────
+id (PK) · purchase_order_id → purchase_orders.id · status · note · actor (agent|operator|system) · created_at
+
+orders  +column: payment_method (cod|gateway)
+products.search_vector  → regenerated with 'simple' tsconfig (Arabic-friendly)
+```
+
+- **landed cost** = `supplier_price + shipping_cost`; the sourcing agent picks the
+  cheapest active offer whose margin vs the selling price ≥ `MARGIN_MIN_PERCENT`.
+- One `purchase_order` per order item; the parent order's status is derived from its
+  POs by `fulfillment_service.sync_order_status`.

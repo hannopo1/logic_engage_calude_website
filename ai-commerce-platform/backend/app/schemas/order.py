@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 class OrderCreate(BaseModel):
     shipping_address: str | None = None
+    payment_method: str = "cod"  # cod | gateway
 
 
 class OrderItemOut(BaseModel):
@@ -23,6 +24,7 @@ class OrderItemOut(BaseModel):
 class OrderOut(BaseModel):
     id: int
     status: str
+    payment_method: str = "cod"
     payment_status: str
     total_amount: Decimal
     shipping_address: str | None = None

@@ -25,6 +25,19 @@ class Settings(BaseSettings):
     # CORS — comma-separated string; parsed into a list below.
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
 
+    # Commerce / market
+    CURRENCY: str = "EGP"
+
+    # Drop-shipping agents
+    # assisted:   agent prepares everything, operator approves & confirms the buy
+    # simulation: agent auto-executes with fake refs (demo/testing only)
+    # api:        official supplier API connectors (must be configured)
+    AGENT_MODE: str = "assisted"
+    MARGIN_MIN_PERCENT: float = 15.0  # minimum gross margin the sourcing agent requires
+
+    # Payments (cod = cash on delivery; gateway needs a configured provider)
+    PAYMENT_PROVIDER: str = "cod"
+
     # AI layer
     AI_PROVIDER: str = "stub"  # stub | anthropic | openai
     ANTHROPIC_API_KEY: str = ""

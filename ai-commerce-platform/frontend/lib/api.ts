@@ -1,10 +1,15 @@
 import type {
+  ApproveResult,
   Cart,
   Category,
   ChatResponse,
+  Dashboard,
   Order,
   Product,
   ProductList,
+  PurchaseOrder,
+  Supplier,
+  TimelineStep,
 } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -92,6 +97,58 @@ export const api = {
       headers: headers(),
       body: JSON.stringify({ shipping_address }),
     }).then(handle<Order>),
+  checkoutWith: (shipping_address: string, payment_method = "cod") =>
+    fetch(`${API}/orders`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ shipping_address, payment_method }),
+    }).then(handle<Order>),
+  myOrders: () =>
+    fetch(`${API}/orders`, { headers: headers(false) }).then(handle<Order[]>),
+  order: (id: number) =>
+    fetch(`${API}/orders/${id}`, { headers: headers(false) }).then(handle<Order>),
+  orderTimeline: (id: number) =>
+    fetch(`${API}/orders/${id}/timeline`, { headers: headers(false) }).then(
+      handle<TimelineStep[]>,
+    ),
+
+  // Admin (operator) — drop-shipping control room
+  adminDashboard: () =>
+    fetch(`${API}/admin/dashboard`, { headers: headers(false) }).then(handle<Dashboard>),
+  adminPurchaseOrders: (status?: string) =>
+    fetch(`${API}/admin/purchase-orders${status ? `?status=${status}` : ""}`, {
+      headers: headers(false),
+    }).then(handle<PurchaseOrder[]>),
+  adminApprove: (id: number) =>
+    fetch(`${API}/admin/purchase-orders/${id}/approve`, {
+      method: "POST",
+      headers: headers(false),
+    }).then(handle<ApproveResult & { po: PurchaseOrder }>),
+  adminReject: (id: number, note: string, cancel: boolean) =>
+    fetch(`${API}/admin/purchase-orders/${id}/reject`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ note, cancel }),
+    }).then(handle<PurchaseOrder>),
+  adminMarkPurchased: (id: number, supplier_order_ref: string, actual_cost?: string) =>
+    fetch(`${API}/admin/purchase-orders/${id}/mark-purchased`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ supplier_order_ref, actual_cost }),
+    }).then(handle<PurchaseOrder>),
+  adminShip: (id: number, tracking_no: string, carrier?: string) =>
+    fetch(`${API}/admin/purchase-orders/${id}/ship`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ tracking_no, carrier }),
+    }).then(handle<PurchaseOrder>),
+  adminDeliver: (id: number) =>
+    fetch(`${API}/admin/purchase-orders/${id}/deliver`, {
+      method: "POST",
+      headers: headers(false),
+    }).then(handle<PurchaseOrder>),
+  adminSuppliers: () =>
+    fetch(`${API}/admin/suppliers`, { headers: headers(false) }).then(handle<Supplier[]>),
 
   // Auth
   register: (body: { email: string; password: string; first_name?: string }) =>
