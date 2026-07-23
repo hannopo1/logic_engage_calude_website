@@ -179,12 +179,103 @@ class JumiaConnector(SupplierConnector):
     slug = "jumia-eg"
 
 
+class ApiDropshipConnector(SupplierConnector):
+    """Generic official drop-ship supplier connector — READY TEMPLATE.
+
+    Unlike the retail marketplaces, a real drop-ship supplier/aggregator gives
+    you an official REST order API. This connector implements the *conventional*
+    shape of such an API end-to-end, so for many suppliers it works after only
+    filling `.env` — and where field names differ, you tweak a few lines.
+
+    Expected supplier API (adjust to your supplier's docs):
+      POST {DROPSHIP_API_BASE}/orders
+        headers: Authorization: Bearer <key>   (or  X-Api-Key: <key>)
+        body: { external_id, items:[{sku, quantity, product_url}],
+                shipping_address, max_unit_cost }
+        resp: { <DROPSHIP_ORDER_ID_FIELD>: "..." }
+      GET  {DROPSHIP_API_BASE}/orders/{ref}     → status + tracking (optional)
+
+    Activation:
+      1. Get your supplier's API base URL + key.
+      2. Fill DROPSHIP_API_BASE / DROPSHIP_API_KEY / DROPSHIP_API_AUTH_STYLE /
+         DROPSHIP_ORDER_ID_FIELD in .env.
+      3. In the admin, create/set a supplier with slug 'api-dropship', mode='api'.
+      4. Set AGENT_MODE=api. The purchasing agent routes buys here automatically.
+    """
+
+    slug = "api-dropship"
+
+    def _configured(self) -> bool:
+        return bool(settings.DROPSHIP_API_BASE and settings.DROPSHIP_API_KEY)
+
+    def _auth_headers(self) -> dict[str, str]:
+        if settings.DROPSHIP_API_AUTH_STYLE.lower() == "x-api-key":
+            return {"X-Api-Key": settings.DROPSHIP_API_KEY}
+        return {"Authorization": f"Bearer {settings.DROPSHIP_API_KEY}"}
+
+    def place_order(self, po: PurchaseOrder, ship_to: str) -> PurchaseResult:
+        if not self._configured():
+            raise NotConfiguredError(
+                "Drop-ship supplier API not configured. Fill DROPSHIP_API_* in .env "
+                "and set the supplier mode='api' to enable auto-purchase."
+            )
+        offer = po.offer
+        item = {
+            "sku": (offer.external_sku if offer else None),
+            "product_url": (offer.url if offer else None),
+            "quantity": po.quantity,
+        }
+        payload = {
+            "external_id": f"PO-{po.id}",  # your order id → idempotency on their side
+            "items": [item],
+            "shipping_address": ship_to,   # map to the supplier's address schema if needed
+            "max_unit_cost": str(po.expected_cost) if po.expected_cost is not None else None,
+        }
+        resp = httpx.post(
+            f"{settings.DROPSHIP_API_BASE.rstrip('/')}/orders",
+            headers={**self._auth_headers(), "Content-Type": "application/json"},
+            json=payload,
+            timeout=60,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        ref = (
+            data.get(settings.DROPSHIP_ORDER_ID_FIELD)
+            or data.get("id")
+            or data.get("reference")
+        )
+        if not ref:
+            raise NotConfiguredError(
+                "Order placed but no order id found in the response — set "
+                "DROPSHIP_ORDER_ID_FIELD to match your supplier's response."
+            )
+        return PurchaseResult(ok=True, supplier_order_ref=str(ref), detail="تم الشراء عبر API المورد")
+
+    def get_tracking(self, order_ref: str) -> dict:
+        """Optional: fetch order status/tracking. Adjust field names to your API."""
+        if not self._configured():
+            raise NotConfiguredError("Drop-ship supplier API not configured.")
+        resp = httpx.get(
+            f"{settings.DROPSHIP_API_BASE.rstrip('/')}/orders/{order_ref}",
+            headers=self._auth_headers(),
+            timeout=30,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
 # OLX/Dubizzle is person-to-person classifieds: no purchase API exists, so it
 # intentionally has no connector — those POs are always operator-manual.
 
 _REGISTRY: dict[str, SupplierConnector] = {
     c.slug: c()
-    for c in (SimulationConnector, AmazonBusinessConnector, NoonConnector, JumiaConnector)
+    for c in (
+        SimulationConnector,
+        AmazonBusinessConnector,
+        NoonConnector,
+        JumiaConnector,
+        ApiDropshipConnector,
+    )
 }
 
 

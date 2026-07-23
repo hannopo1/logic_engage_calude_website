@@ -65,6 +65,15 @@ def test_connector_registry_and_compliance():
     # OLX deliberately has no connector (person-to-person classifieds).
     assert get_connector("olx-eg") is None
 
+    # Generic API drop-ship connector exists but is gated until configured.
+    api_ds = get_connector("api-dropship")
+    assert api_ds is not None
+    try:
+        api_ds.place_order(None, "Cairo")  # type: ignore[arg-type]
+        raise AssertionError("unconfigured api-dropship must raise")
+    except NotConfiguredError:
+        pass
+
     # Simulation works and never returns an empty ref.
     result = SimulationConnector().place_order(None, "Cairo")  # type: ignore[arg-type]
     assert result.ok and result.supplier_order_ref.startswith("SIM-")

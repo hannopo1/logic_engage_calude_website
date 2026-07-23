@@ -38,6 +38,15 @@ class Settings(BaseSettings):
     # Payments (cod = cash on delivery; gateway needs a configured provider)
     PAYMENT_PROVIDER: str = "cod"
 
+    # Generic official drop-ship supplier API connector.
+    # Works with any supplier that exposes a conventional REST order API.
+    # Empty base/key → connector stays inert (assisted flow is used).
+    DROPSHIP_API_BASE: str = ""           # e.g. https://api.my-supplier.com/v1
+    DROPSHIP_API_KEY: str = ""            # your supplier API key/token
+    DROPSHIP_API_AUTH_STYLE: str = "bearer"   # bearer | x-api-key
+    # JSON field in the supplier's create-order response that holds the order id.
+    DROPSHIP_ORDER_ID_FIELD: str = "order_id"
+
     # Amazon Business API connector (official B2B procurement path).
     # Empty by default → the connector stays inert (assisted flow is used).
     # Fill these once your Amazon Business account + API access are approved.
