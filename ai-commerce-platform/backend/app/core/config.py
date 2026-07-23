@@ -38,6 +38,19 @@ class Settings(BaseSettings):
     # Payments (cod = cash on delivery; gateway needs a configured provider)
     PAYMENT_PROVIDER: str = "cod"
 
+    # Amazon Business API connector (official B2B procurement path).
+    # Empty by default → the connector stays inert (assisted flow is used).
+    # Fill these once your Amazon Business account + API access are approved.
+    AMAZON_BUSINESS_CLIENT_ID: str = ""
+    AMAZON_BUSINESS_CLIENT_SECRET: str = ""
+    AMAZON_BUSINESS_REFRESH_TOKEN: str = ""
+    # LWA token endpoint (region-specific for some accounts; default is global).
+    AMAZON_BUSINESS_TOKEN_URL: str = "https://api.amazon.com/auth/o2/token"
+    # Base URL of the Amazon Business API for your region/integration.
+    AMAZON_BUSINESS_API_BASE: str = ""
+    # Your Amazon Business marketplace id (e.g. Egypt) — from account setup.
+    AMAZON_BUSINESS_MARKETPLACE_ID: str = ""
+
     # AI layer
     AI_PROVIDER: str = "stub"  # stub | anthropic | openai
     ANTHROPIC_API_KEY: str = ""
