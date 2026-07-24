@@ -35,11 +35,22 @@ function sessionId(): string {
   return sid;
 }
 
+/**
+ * Retrieves the stored authentication token in browser environments.
+ *
+ * @returns The stored authentication token, or `null` when unavailable.
+ */
 function token(): string | null {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("token");
 }
 
+/**
+ * Builds request headers with session identification and optional JSON content type.
+ *
+ * @param json - Whether to include the JSON content type header
+ * @returns Headers containing the session identifier and, when available, bearer authentication
+ */
 function headers(json = true): Record<string, string> {
   const h: Record<string, string> = {};
   if (json) h["Content-Type"] = "application/json";
@@ -49,6 +60,13 @@ function headers(json = true): Record<string, string> {
   return h;
 }
 
+/**
+ * Parses a successful response or throws an error for an unsuccessful response.
+ *
+ * @param res - The response to process
+ * @returns The parsed response body
+ * @throws An error containing the response detail or status text when the response is unsuccessful
+ */
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let detail = res.statusText;
@@ -267,6 +285,11 @@ export const api = {
     }).then(handle<ChatResponse>),
 };
 
+/**
+ * Stores an authentication token for subsequent API requests.
+ *
+ * @param t - The authentication token to store
+ */
 export function setToken(t: string) {
   localStorage.setItem("token", t);
 }

@@ -15,6 +15,9 @@ const TRUST = [
   { icon: ShieldCheck, label: "تقييمات موثّقة" },
 ];
 
+/**
+ * Renders the storefront home page with a hero section and featured products.
+ */
 export default function Home() {
   const [featured, setFeatured] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

@@ -6,6 +6,11 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { fmtEGP } from "@/lib/format";
 
+/**
+ * Renders the shopping cart page with empty-cart and populated-cart states.
+ *
+ * @returns The cart page interface
+ */
 export default function CartPage() {
   const { cart, update, remove } = useCart();
 

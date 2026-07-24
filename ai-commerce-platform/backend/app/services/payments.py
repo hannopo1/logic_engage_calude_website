@@ -30,7 +30,19 @@ class PaymentProvider(ABC):
 
     @abstractmethod
     def authorize(self, amount: float, currency: str, meta: dict) -> PaymentResult:
-        """Authorize a payment for checkout. Must not raise for normal declines."""
+        """
+        Authorize a payment for checkout.
+        
+        Parameters:
+            amount (float): Payment amount.
+            currency (str): Payment currency.
+            meta (dict): Additional payment metadata.
+        
+        Returns:
+            PaymentResult: The authorization outcome.
+        
+        Normal payment declines are represented in the result rather than raised as exceptions.
+        """
 
 
 class CODProvider(PaymentProvider):
@@ -39,6 +51,17 @@ class CODProvider(PaymentProvider):
     name = "cod"
 
     def authorize(self, amount: float, currency: str, meta: dict) -> PaymentResult:
+        """
+        Authorize payment for cash on delivery.
+        
+        Parameters:
+            amount (float): Order amount.
+            currency (str): Payment currency.
+            meta (dict): Additional payment metadata.
+        
+        Returns:
+            PaymentResult: An accepted COD result with an unpaid status.
+        """
         return PaymentResult(
             accepted=True,
             method="cod",
@@ -53,6 +76,12 @@ class GatewayStubProvider(PaymentProvider):
     name = "gateway"
 
     def authorize(self, amount: float, currency: str, meta: dict) -> PaymentResult:
+        """
+        Report that electronic gateway payment authorization is unavailable.
+        
+        Returns:
+            PaymentResult: An unpaid result marked as declined, with instructions for enabling the payment gateway.
+        """
         return PaymentResult(
             accepted=False,
             method="gateway",
@@ -66,10 +95,14 @@ class GatewayStubProvider(PaymentProvider):
 
 
 def get_payment_provider(method: str | None = None) -> PaymentProvider:
-    """Resolve the provider for a checkout.
-
-    `method` is what the customer chose (cod|gateway); the platform-level
-    PAYMENT_PROVIDER setting gates whether gateway is actually available.
+    """
+    Selects the payment provider for a checkout method.
+    
+    Parameters:
+        method (str | None): Customer-selected payment method. Gateway requests use the gateway stub; other values default to cash on delivery.
+    
+    Returns:
+        PaymentProvider: The selected payment provider.
     """
     chosen = (method or "cod").lower()
     if chosen == "gateway" and settings.PAYMENT_PROVIDER.lower() == "gateway":

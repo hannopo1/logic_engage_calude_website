@@ -5,7 +5,11 @@ import { useEffect } from "react";
 
 import { api } from "@/lib/api";
 
-/** Fires a page_view event on every route change. Mounted once in the layout. */
+/**
+ * Tracks storefront page views when the route changes.
+ *
+ * Administrative routes are excluded from tracking. Mount this component once in the application layout.
+ */
 export default function Tracker() {
   const pathname = usePathname();
   useEffect(() => {

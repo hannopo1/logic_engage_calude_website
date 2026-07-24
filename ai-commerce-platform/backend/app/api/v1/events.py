@@ -25,6 +25,16 @@ def track(
     user: User | None = Depends(get_current_user_optional),
     x_session_id: str | None = Header(default=None, alias="X-Session-Id"),
 ) -> dict:
+    """
+    Record a storefront analytics event when its event type is recognized.
+    
+    Parameters:
+        payload (EventIn): Event data to record.
+        x_session_id (str | None): Anonymous session identifier from the request header.
+    
+    Returns:
+        dict: A result containing `ok=True` when the event is recorded, or `ok=False` for an unrecognized event type.
+    """
     if payload.event_type not in EVENT_TYPES:
         return {"ok": False}
     db.add(

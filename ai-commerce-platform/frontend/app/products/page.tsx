@@ -8,6 +8,11 @@ import SearchBar from "@/components/SearchBar";
 import { api } from "@/lib/api";
 import type { Category, Product } from "@/lib/types";
 
+/**
+ * Displays a searchable, category-filtered products listing with loading and empty states.
+ *
+ * @returns The products listing interface.
+ */
 function ProductsInner() {
   const params = useSearchParams();
   const q = params.get("q") || "";
@@ -89,6 +94,9 @@ function ProductsInner() {
   );
 }
 
+/**
+ * Renders the products page with a loading fallback while its content is unavailable.
+ */
 export default function ProductsPage() {
   return (
     <Suspense fallback={<p className="text-stone-500">جارٍ التحميل…</p>}>

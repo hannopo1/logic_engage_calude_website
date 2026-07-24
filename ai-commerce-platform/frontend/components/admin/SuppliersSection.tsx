@@ -5,6 +5,11 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Supplier } from "@/lib/types";
 
+/**
+ * Displays the supplier list with supplier types, operating modes, notes, and count.
+ *
+ * @returns The rendered supplier section.
+ */
 export default function SuppliersSection() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   useEffect(() => {

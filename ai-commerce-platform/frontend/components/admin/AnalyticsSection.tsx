@@ -6,6 +6,9 @@ import { api } from "@/lib/api";
 import type { Analytics } from "@/lib/types";
 import { Stat } from "./ui";
 
+/**
+ * Displays visitor analytics for a selectable date range.
+ */
 export default function AnalyticsSection() {
   const [a, setA] = useState<Analytics | null>(null);
   const [days, setDays] = useState(30);

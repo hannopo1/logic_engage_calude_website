@@ -17,11 +17,15 @@ def search_products(
     limit: int = Query(default=20, ge=1, le=50),
     db: Session = Depends(get_db),
 ) -> list[Product]:
-    """Full-text search over the products GIN(search_vector) index.
-
-    Uses websearch_to_tsquery so natural phrases ("wireless headphones under budget")
-    work without special syntax. Ranked by ts_rank; falls back to ILIKE if the
-    tsquery yields nothing (e.g. very short/partial tokens).
+    """
+    Search active products using full-text matching with a name-based fallback.
+    
+    Parameters:
+        q (str): Free-text search query.
+        limit (int): Maximum number of products to return.
+    
+    Returns:
+        list[Product]: Active products matching the query, ranked by relevance when full-text matches are found.
     """
     # 'simple' config: neutral tokenizer, correct for the Arabic catalog.
     tsquery = func.websearch_to_tsquery("simple", q)

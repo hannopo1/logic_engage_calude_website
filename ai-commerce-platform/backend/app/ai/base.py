@@ -17,15 +17,31 @@ class AIProvider(ABC):
 
     @abstractmethod
     def chat(self, message: str, history: list[dict], context: str) -> str:
-        """Return an assistant reply grounded in `context` (catalog + policies)."""
+        """
+        Generate an assistant reply using the conversation history and supplied context.
+        
+        Parameters:
+            message (str): The user's current message.
+            history (list[dict]): Previous conversation messages.
+            context (str): Reference information, including catalog data and policies.
+        
+        Returns:
+            str: The assistant's context-grounded reply.
+        
+        Raises:
+            NotImplementedError: When called on the base provider instead of a concrete implementation.
+        """
         raise NotImplementedError
 
 
 def get_provider() -> AIProvider:
-    """Factory: choose a provider from settings, falling back to the stub.
-
-    Falls back to the stub whenever the selected provider is missing its key,
-    so the platform never hard-fails on a misconfiguration.
+    """Select an AI provider based on application settings.
+    
+    Falls back to the stub provider when the configured provider is unsupported or
+    its required API key is unavailable.
+    
+    Returns:
+        AIProvider: The configured provider or a stub provider.
     """
     provider = (settings.AI_PROVIDER or "stub").lower()
 

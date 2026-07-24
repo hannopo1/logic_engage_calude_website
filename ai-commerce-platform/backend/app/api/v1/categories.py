@@ -13,4 +13,9 @@ router = APIRouter()
 
 @router.get("", response_model=list[CategoryOut])
 def list_categories(db: Session = Depends(get_db)) -> list[Category]:
+    """List all categories ordered by name.
+    
+    Returns:
+        list[Category]: Categories ordered alphabetically by name.
+    """
     return list(db.scalars(select(Category).order_by(Category.name)))

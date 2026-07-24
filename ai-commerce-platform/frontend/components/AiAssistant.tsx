@@ -10,6 +10,11 @@ interface Msg {
   content: string;
 }
 
+/**
+ * Renders a toggleable shopping assistant chat interface.
+ *
+ * @returns The shopping assistant launcher and chat panel.
+ */
 export default function AiAssistant() {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([

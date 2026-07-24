@@ -14,6 +14,9 @@ depends_on = None
 
 
 def upgrade() -> None:
+    """
+    Create the reviews table and its product index.
+    """
     op.create_table(
         "reviews",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -42,5 +45,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """
+    Remove the reviews table and its associated product index.
+    """
     op.drop_index("ix_reviews_product_id", table_name="reviews")
     op.drop_table("reviews")

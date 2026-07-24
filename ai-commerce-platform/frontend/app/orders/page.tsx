@@ -15,6 +15,9 @@ const STATUS_AR: Record<string, string> = {
   cancelled: "ملغي",
 };
 
+/**
+ * Displays the current user's orders, with loading, empty, and login-required states.
+ */
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [needLogin, setNeedLogin] = useState(false);

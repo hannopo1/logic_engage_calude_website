@@ -24,7 +24,15 @@ from app.services import fulfillment_service
 
 
 def build_purchase_package(po: PurchaseOrder) -> dict:
-    """Everything the operator (or a connector) needs to place the buy."""
+    """
+    Build the data required to place a purchase order.
+    
+    Parameters:
+        po (PurchaseOrder): The approved purchase order and its selected offer.
+    
+    Returns:
+        dict: A purchase package containing supplier, product, pricing, quantity, currency, shipping, and execution instructions.
+    """
     offer = po.offer
     supplier = offer.supplier if offer else None
     max_unit = (
@@ -51,7 +59,17 @@ def build_purchase_package(po: PurchaseOrder) -> dict:
 
 
 def execute_purchase(db: Session, po: PurchaseOrder) -> dict:
-    """Run right after operator approval. Returns the purchase package/result."""
+    """
+    Execute an approved purchase according to the configured agent mode.
+    
+    Parameters:
+        po (PurchaseOrder): The approved purchase order to execute.
+    
+    Returns:
+        dict: A result payload containing the execution mode, outcome, and purchase package.
+            Automatic modes report a purchased outcome; assisted flows report that operator
+            execution is pending.
+    """
     mode = settings.AGENT_MODE.lower()
     supplier = po.offer.supplier if po.offer else None
 

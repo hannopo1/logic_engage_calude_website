@@ -7,6 +7,9 @@ import { api } from "@/lib/api";
 import { fmtDate } from "@/lib/format";
 import type { AdminReview } from "@/lib/types";
 
+/**
+ * Displays product reviews with filtering, approval, and deletion controls.
+ */
 export default function ReviewsSection() {
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [status, setStatus] = useState<"pending" | "all">("pending");

@@ -19,6 +19,15 @@ _STOPWORDS = {
 
 
 def _tokens(text: str) -> list[str]:
+    """
+    Extract meaningful lowercase tokens from text.
+    
+    Parameters:
+        text (str): Text to tokenize.
+    
+    Returns:
+        list[str]: Tokens excluding stopwords and single-character words.
+    """
     return [t for t in re.findall(r"[\w']+", text.lower()) if t not in _STOPWORDS and len(t) > 1]
 
 
@@ -26,6 +35,17 @@ class StubProvider(AIProvider):
     name = "stub"
 
     def chat(self, message: str, history: list[dict], context: str) -> str:
+        """
+        Finds the context lines that best match the user's message and presents up to four results.
+        
+        Parameters:
+            message (str): The user's request used to identify matching context lines.
+            history (list[dict]): Prior conversation messages.
+            context (str): Product entries and policy facts to search.
+        
+        Returns:
+            str: An Arabic response containing the closest matching context lines, or a fallback message when no matches are found.
+        """
         query_tokens = set(_tokens(message))
 
         # Rank context lines (each line is a product or a policy fact).

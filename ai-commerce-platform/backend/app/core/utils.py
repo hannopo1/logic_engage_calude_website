@@ -6,10 +6,11 @@ import secrets
 
 
 def slugify(text: str) -> str:
-    """URL-safe slug that preserves Arabic letters.
-
-    Lowercases, collapses whitespace to single hyphens, and drops characters
-    that are not letters/digits/hyphens (Unicode-aware, so Arabic is kept).
+    """
+    Create a lowercase, URL-friendly slug while preserving Unicode word characters.
+    
+    Returns:
+    	str: The normalized slug, or a random hexadecimal token when the input produces an empty slug.
     """
     text = (text or "").strip().lower()
     text = re.sub(r"\s+", "-", text)
@@ -19,7 +20,16 @@ def slugify(text: str) -> str:
 
 
 def unique_slug(text: str, exists) -> str:
-    """Return a slug not already taken. `exists(slug) -> bool`."""
+    """
+    Generate a unique URL-friendly slug from the provided text.
+    
+    Parameters:
+        text (str): The text to convert into a slug.
+        exists (Callable[[str], bool]): A predicate that reports whether a slug is already taken.
+    
+    Returns:
+        str: The first generated slug that is not already taken.
+    """
     base = slugify(text)
     slug = base
     while exists(slug):

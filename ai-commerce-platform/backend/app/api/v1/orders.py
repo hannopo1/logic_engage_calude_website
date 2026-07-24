@@ -23,6 +23,16 @@ def create_order(
     user: User | None = Depends(get_current_user_optional),
     x_session_id: str | None = Header(default=None, alias="X-Session-Id"),
 ) -> Order:
+    """
+    Create an order from the current user's or session's cart.
+    
+    Parameters:
+        payload (OrderCreate): Order details, including shipping address, payment method, and optional coupon code.
+        x_session_id (str | None): Optional session identifier for associating the cart with an anonymous customer.
+    
+    Returns:
+        Order: The newly created order.
+    """
     cart = cart_service.get_or_create_cart(db, user, x_session_id)
     return order_service.create_order_from_cart(
         db, cart, user, payload.shipping_address, payload.payment_method, payload.coupon_code
@@ -34,6 +44,11 @@ def my_orders(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[Order]:
+    """List the authenticated user's orders, with the most recent orders first.
+    
+    Returns:
+    	list[Order]: The user's orders ordered by creation time descending.
+    """
     return list(
         db.scalars(select(Order).where(Order.user_id == user.id).order_by(Order.created_at.desc()))
     )
@@ -45,6 +60,18 @@ def get_order(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> Order:
+    """
+    Retrieve an order belonging to the authenticated user.
+    
+    Parameters:
+    	order_id (int): The identifier of the order to retrieve.
+    
+    Returns:
+    	Order: The requested order.
+    
+    Raises:
+    	HTTPException: If the order does not exist or belongs to another user.
+    """
     order = db.get(Order, order_id)
     if order is None or order.user_id != user.id:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -67,7 +94,20 @@ def order_timeline(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> list[TimelineStep]:
-    """Sanitized fulfillment timeline: what the customer sees, in Arabic."""
+    """
+    Build the customer-visible fulfillment timeline for an order.
+    
+    Parameters:
+        order_id (int): Identifier of the order whose timeline is requested.
+    
+    Returns:
+        list[TimelineStep]: Timeline steps in customer display order, including
+            completion status and timestamps for each fulfillment stage.
+    
+    Raises:
+        HTTPException: If the order does not exist or does not belong to the
+            authenticated user.
+    """
     order = db.get(Order, order_id)
     if order is None or order.user_id != user.id:
         raise HTTPException(status_code=404, detail="الطلب غير موجود")
@@ -76,7 +116,15 @@ def order_timeline(
     active = [p for p in pos if p.status not in ("cancelled", "failed")]
 
     def stage_time(statuses: set[str]):
-        """Latest event time at which every active PO had reached the stage."""
+        """
+        Determine when all active purchase orders reached a fulfillment stage.
+        
+        Parameters:
+            statuses (set[str]): Event statuses that indicate the stage was reached.
+        
+        Returns:
+            The timestamp when the last active purchase order reached the stage, or None if any active purchase order has not reached it.
+        """
         times = []
         for po in active:
             hit = [e.created_at for e in po.events if e.status in statuses]

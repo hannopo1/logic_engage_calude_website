@@ -7,6 +7,9 @@ import { useState } from "react";
 import { api, setToken } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 
+/**
+ * Renders the login and registration page with authentication controls.
+ */
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useCart();

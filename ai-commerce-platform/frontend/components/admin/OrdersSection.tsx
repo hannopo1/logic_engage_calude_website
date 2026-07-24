@@ -19,6 +19,14 @@ const STATUS_AR: Record<string, string> = {
 };
 const TABS = ["awaiting_approval", "pending_sourcing", "purchasing", "purchased", "shipped", "delivered"];
 
+/**
+ * Renders the purchase order management interface for administrators.
+ *
+ * Displays dashboard metrics, status-based order lists, purchase workflow actions,
+ * notifications, and purchase execution details.
+ *
+ * @returns The purchase order management interface.
+ */
 export default function OrdersSection() {
   const [dash, setDash] = useState<Dashboard | null>(null);
   const [tab, setTab] = useState("awaiting_approval");

@@ -21,6 +21,11 @@ interface CartCtx {
 
 const Ctx = createContext<CartCtx | null>(null);
 
+/**
+ * Provides cart state and operations to descendant components through React context.
+ *
+ * @param children - The descendant components that can access the cart context.
+ */
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null);
 
@@ -52,6 +57,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Provides access to the cart context.
+ *
+ * @returns The current cart state and cart operations.
+ * @throws An error if used outside `CartProvider`.
+ */
 export function useCart(): CartCtx {
   const ctx = useContext(Ctx);
   if (!ctx) throw new Error("useCart must be used within CartProvider");

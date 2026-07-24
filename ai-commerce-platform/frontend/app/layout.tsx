@@ -22,6 +22,11 @@ export const metadata: Metadata = {
   description: "متجر قهوة مختصة مدعوم بالذكاء الاصطناعي — توصيل لكل مصر، الدفع عند الاستلام.",
 };
 
+/**
+ * Defines the root document structure and shared storefront components for all pages.
+ *
+ * @param children - The page content rendered within the main layout.
+ */
 export default function RootLayout({
   children,
 }: {

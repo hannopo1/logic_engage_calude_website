@@ -26,11 +26,17 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/health", tags=["meta"])
 def health() -> dict:
+    """Report the application's health status and configured AI provider.
+    
+    Returns:
+    	dict: A status payload containing ``"ok"`` and the configured AI provider.
+    """
     return {"status": "ok", "ai_provider": settings.AI_PROVIDER}
 
 
 @app.get("/", tags=["meta"])
 def root() -> dict:
+    """Provide basic project metadata and links to the documentation and API."""
     return {
         "name": settings.PROJECT_NAME,
         "docs": "/docs",

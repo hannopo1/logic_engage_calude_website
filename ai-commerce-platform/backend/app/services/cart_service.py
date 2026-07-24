@@ -13,7 +13,19 @@ from app.models.user import User
 
 
 def get_or_create_cart(db: Session, user: User | None, session_id: str | None) -> Cart:
-    """Resolve the active cart for a user (preferred) or an anonymous session."""
+    """
+    Resolve the active cart for an authenticated user or anonymous session.
+    
+    Parameters:
+        user (User | None): Authenticated user associated with the cart.
+        session_id (str | None): Session identifier for an anonymous cart.
+    
+    Returns:
+        Cart: The existing cart or a newly created cart.
+    
+    Raises:
+        HTTPException: If no user is provided and session_id is missing.
+    """
     if user is not None:
         cart = db.scalar(select(Cart).where(Cart.user_id == user.id))
         if cart is None:
@@ -38,6 +50,19 @@ def get_or_create_cart(db: Session, user: User | None, session_id: str | None) -
 
 
 def add_item(db: Session, cart: Cart, product_id: int, quantity: int) -> Cart:
+    """
+    Add a product to a cart or increase its existing quantity.
+    
+    Parameters:
+        product_id (int): Identifier of the product to add.
+        quantity (int): Number of units to add.
+    
+    Returns:
+        Cart: The updated cart.
+    
+    Raises:
+        HTTPException: If the product does not exist or is inactive.
+    """
     product = db.get(Product, product_id)
     if product is None or not product.is_active:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -56,6 +81,19 @@ def add_item(db: Session, cart: Cart, product_id: int, quantity: int) -> Cart:
 
 
 def update_item(db: Session, cart: Cart, product_id: int, quantity: int) -> Cart:
+    """
+    Update a product's quantity in a cart.
+    
+    Parameters:
+        product_id (int): Identifier of the product whose cart item to update.
+        quantity (int): New quantity; zero removes the item.
+    
+    Returns:
+        Cart: The updated cart.
+    
+    Raises:
+        HTTPException: If the product is not in the cart.
+    """
     item = db.scalar(
         select(CartItem).where(CartItem.cart_id == cart.id, CartItem.product_id == product_id)
     )
@@ -71,6 +109,15 @@ def update_item(db: Session, cart: Cart, product_id: int, quantity: int) -> Cart
 
 
 def remove_item(db: Session, cart: Cart, product_id: int) -> Cart:
+    """
+    Remove a product from a cart when it is present.
+    
+    Parameters:
+        product_id (int): Identifier of the product to remove.
+    
+    Returns:
+        Cart: The updated cart.
+    """
     item = db.scalar(
         select(CartItem).where(CartItem.cart_id == cart.id, CartItem.product_id == product_id)
     )
@@ -82,7 +129,12 @@ def remove_item(db: Session, cart: Cart, product_id: int) -> Cart:
 
 
 def serialize_cart(cart: Cart) -> dict:
-    """Shape a Cart ORM object into the CartOut response payload."""
+    """
+    Build a cart response payload with item details, subtotal, and total item count.
+    
+    Returns:
+        dict: A payload containing the cart ID, serialized items, subtotal, and item count.
+    """
     items = []
     subtotal = Decimal("0")
     count = 0

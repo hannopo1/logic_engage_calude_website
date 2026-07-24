@@ -11,6 +11,11 @@ import { api } from "@/lib/api";
 import { fmtEGP } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
+/**
+ * Displays product details, reviews, recommendations, and purchase actions for a product slug.
+ *
+ * @param params - Route parameters containing the product slug.
+ */
 export default function ProductPage({ params }: { params: { slug: string } }) {
   const { add } = useCart();
   const [product, setProduct] = useState<Product | null>(null);

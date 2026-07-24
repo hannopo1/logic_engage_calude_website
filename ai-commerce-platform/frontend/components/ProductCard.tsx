@@ -9,6 +9,9 @@ import { useCart } from "@/context/CartContext";
 import { fmtEGP } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
+/**
+ * Renders a product card with product details and an add-to-cart action.
+ */
 export default function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
   const [busy, setBusy] = useState(false);

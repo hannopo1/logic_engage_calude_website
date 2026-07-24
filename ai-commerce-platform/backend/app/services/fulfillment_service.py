@@ -27,6 +27,16 @@ _TRANSITIONS: dict[str, set[str]] = {
 
 
 def can_transition(current: str, target: str) -> bool:
+    """
+    Determine whether a purchase order can move between statuses.
+    
+    Parameters:
+        current (str): The purchase order's current status.
+        target (str): The proposed next status.
+    
+    Returns:
+        bool: `true` if the transition is allowed, `false` otherwise.
+    """
     return target in _TRANSITIONS.get(current, set())
 
 
@@ -39,7 +49,21 @@ def transition(
     note: str | None = None,
     commit: bool = True,
 ) -> PurchaseOrder:
-    """Move a PO to `target`, record the audit event, sync the parent order."""
+    """
+    Move a purchase order to a new status and synchronize its parent order.
+    
+    Parameters:
+        target (str): The status to assign to the purchase order.
+        actor (str): The actor recorded for the status-change event.
+        note (str | None): Optional note recorded with the event.
+        commit (bool): Whether to commit the transaction and refresh the purchase order.
+    
+    Returns:
+        PurchaseOrder: The updated purchase order.
+    
+    Raises:
+        HTTPException: If the target status is unknown or the transition is not allowed.
+    """
     if target not in PO_STATUSES:
         raise HTTPException(status_code=400, detail=f"Unknown status '{target}'")
     if not can_transition(po.status, target):
@@ -59,21 +83,24 @@ def transition(
 def record_event(
     db: Session, po: PurchaseOrder, note: str, *, actor: str = "system", commit: bool = True
 ) -> None:
-    """Append an informational event without changing status."""
+    """
+    Record an informational event for a purchase order without changing its status.
+    
+    Parameters:
+        note (str): Description of the event.
+        actor (str): Identifier of the event source.
+        commit (bool): Whether to commit the database transaction immediately.
+    """
     db.add(PurchaseOrderEvent(purchase_order_id=po.id, status=po.status, note=note, actor=actor))
     if commit:
         db.commit()
 
 
 def sync_order_status(db: Session, order_id: int) -> None:
-    """Reflect PO progress onto the customer-facing order status.
-
-    completed  — every PO delivered
-    shipped    — every PO at least shipped
-    processing — at least one PO past approval (purchasing/purchased/…)
-    pending    — otherwise (sourcing / awaiting approval)
-    Cancelled/failed POs are excluded from the "all" aggregates so one refunded
-    line doesn't block the rest of the order.
+    """
+    Synchronize the customer-facing order status with the aggregate progress of its purchase orders.
+    
+    Cancelled and failed purchase orders are excluded from progress calculations. An order with no active purchase orders is marked as cancelled; otherwise, its status reflects whether all active purchase orders are delivered, all are shipped or delivered, any has progressed beyond sourcing, or all remain pending. Cash-on-delivery orders are marked as paid when all active purchase orders are delivered.
     """
     order = db.get(Order, order_id)
     if order is None:

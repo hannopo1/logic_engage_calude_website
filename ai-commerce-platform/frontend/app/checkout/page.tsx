@@ -9,6 +9,11 @@ import { api } from "@/lib/api";
 import { fmtEGP } from "@/lib/format";
 import type { Order } from "@/lib/types";
 
+/**
+ * Renders the checkout form and, after a successful submission, the order confirmation view.
+ *
+ * @returns The checkout form or order confirmation interface
+ */
 export default function CheckoutPage() {
   const { cart, refresh } = useCart();
   const router = useRouter();

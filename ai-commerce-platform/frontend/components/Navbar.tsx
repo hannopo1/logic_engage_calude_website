@@ -12,6 +12,9 @@ const LINKS = [
   { href: "/login", label: "حسابي", icon: User },
 ];
 
+/**
+ * Renders the application navigation bar with route links and the current cart item count.
+ */
 export default function Navbar() {
   const { cart } = useCart();
   const count = cart?.item_count ?? 0;

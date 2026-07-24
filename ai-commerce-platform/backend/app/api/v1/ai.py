@@ -17,7 +17,15 @@ _MAX_CONTEXT_PRODUCTS = 60
 
 
 def _build_context(db: Session) -> tuple[str, list[Product]]:
-    """Compact catalog + policy context for the assistant (RAG-lite grounding)."""
+    """
+    Build catalog and policy context for the assistant.
+    
+    Parameters:
+    	db (Session): Database session used to load active products.
+    
+    Returns:
+    	tuple[str, list[Product]]: The formatted catalog and policy context, along with the active products included in it.
+    """
     products = list(
         db.scalars(
             select(Product).where(Product.is_active.is_(True)).limit(_MAX_CONTEXT_PRODUCTS)
@@ -40,6 +48,15 @@ def _build_context(db: Session) -> tuple[str, list[Product]]:
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(payload: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
+    """
+    Generate a chat response using catalog and policy context.
+    
+    Parameters:
+        payload (ChatRequest): The user's message and conversation history.
+    
+    Returns:
+        ChatResponse: The provider's reply, provider name, and up to six catalog products referenced in the reply.
+    """
     context, products = _build_context(db)
     provider = get_provider()
     history = [m.model_dump() for m in payload.history]
@@ -56,6 +73,19 @@ def chat(payload: ChatRequest, db: Session = Depends(get_db)) -> ChatResponse:
 
 @router.get("/recommend/{product_id}", response_model=RecommendResponse)
 def recommend(product_id: int, db: Session = Depends(get_db)) -> RecommendResponse:
+    """
+    Generate product recommendations based on category similarity and shared order history.
+    
+    Parameters:
+        product_id (int): ID of the product for which to generate recommendations.
+    
+    Returns:
+        RecommendResponse: Recommendations grouped into similar products and products
+            frequently purchased in the same orders.
+    
+    Raises:
+        HTTPException: If the specified product does not exist.
+    """
     product = db.get(Product, product_id)
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")

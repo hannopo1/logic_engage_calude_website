@@ -69,6 +69,11 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
+        """Parse the configured CORS origins into a cleaned list.
+        
+        Returns:
+        	list[str]: CORS origins with surrounding whitespace removed and empty entries excluded.
+        """
         return [o.strip() for o in self.BACKEND_CORS_ORIGINS.split(",") if o.strip()]
 
 

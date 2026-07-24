@@ -20,6 +20,11 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
+    """
+    Run Alembic migrations in offline mode using the configured database URL.
+    
+    The generated SQL uses literal bound values and named parameters.
+    """
     context.configure(
         url=settings.DATABASE_URL,
         target_metadata=target_metadata,
@@ -31,6 +36,9 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    """
+    Run database migrations using an online database connection.
+    """
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

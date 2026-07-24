@@ -17,7 +17,15 @@ router = APIRouter()
 
 
 def _with_ratings(db: Session, products: list[Product]) -> list[ProductOut]:
-    """Serialize products, attaching approved-review rating aggregates (no N+1)."""
+    """
+    Serialize products with approved-review rating summaries.
+    
+    Parameters:
+    	products (list[Product]): Products to serialize and enrich with rating data.
+    
+    Returns:
+    	list[ProductOut]: Serialized products with average approved rating and review count.
+    """
     stats = review_service.approved_stats_map(db, [p.id for p in products])
     out: list[ProductOut] = []
     for p in products:
@@ -38,6 +46,19 @@ def list_products(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=12, ge=1, le=100),
 ) -> ProductList:
+    """
+    List active products with optional category, price, and pagination filters.
+    
+    Parameters:
+    	category (str | None): Category slug used to filter products.
+    	min_price (float | None): Minimum product price, inclusive.
+    	max_price (float | None): Maximum product price, inclusive.
+    	page (int): One-based page number.
+    	page_size (int): Number of products per page.
+    
+    Returns:
+    	ProductList: Paginated products with the total matching product count.
+    """
     stmt = select(Product).where(Product.is_active.is_(True))
     if category:
         cat = db.scalar(select(Category).where(Category.slug == category))
@@ -64,6 +85,18 @@ def list_products(
 
 @router.get("/{slug}", response_model=ProductOut)
 def get_product(slug: str, db: Session = Depends(get_db)) -> ProductOut:
+    """
+    Retrieve an active product by its slug.
+    
+    Parameters:
+        slug (str): The product slug used to identify the product.
+    
+    Returns:
+        ProductOut: The product enriched with approved review rating data.
+    
+    Raises:
+        HTTPException: If no active product matches the slug.
+    """
     product = db.scalar(select(Product).where(Product.slug == slug, Product.is_active.is_(True)))
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -72,6 +105,19 @@ def get_product(slug: str, db: Session = Depends(get_db)) -> ProductOut:
 
 @router.get("/{slug}/reviews", response_model=ReviewBlock)
 def get_product_reviews(slug: str, db: Session = Depends(get_db)) -> ReviewBlock:
+    """
+    Retrieve the approved reviews and rating summary for a product.
+    
+    Parameters:
+    	slug (str): The product's URL slug.
+    	db (Session): The database session.
+    
+    Returns:
+    	ReviewBlock: The product's rating summary and approved reviews.
+    
+    Raises:
+    	HTTPException: If no product matches the slug.
+    """
     product = db.scalar(select(Product).where(Product.slug == slug))
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -88,6 +134,19 @@ def create_product_review(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ReviewOut:
+    """
+    Create a review for a product.
+    
+    Parameters:
+        product_id (int): Identifier of the product being reviewed.
+        payload (ReviewIn): Review rating, title, and body.
+    
+    Returns:
+        ReviewOut: The newly created review.
+    
+    Raises:
+        HTTPException: If the product does not exist.
+    """
     product = db.get(Product, product_id)
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")

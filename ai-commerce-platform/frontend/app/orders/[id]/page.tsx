@@ -8,6 +8,12 @@ import { api } from "@/lib/api";
 import { fmtDate, fmtEGP } from "@/lib/format";
 import type { Order, TimelineStep } from "@/lib/types";
 
+/**
+ * Displays the tracking timeline, summary, shipping details, and payment method for an order.
+ *
+ * @param params - Route parameters containing the order identifier.
+ * @returns The order tracking page content.
+ */
 export default function OrderTrackingPage({ params }: { params: { id: string } }) {
   const id = Number(params.id);
   const [order, setOrder] = useState<Order | null>(null);

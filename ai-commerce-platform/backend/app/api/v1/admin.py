@@ -57,6 +57,12 @@ router = APIRouter(dependencies=[Depends(get_current_admin)])
 # ---------- helpers ----------
 
 def _po_out(po: PurchaseOrder) -> PurchaseOrderOut:
+    """
+    Builds an API response representation of a purchase order, including related supplier, product, customer address, and event details.
+    
+    Returns:
+        PurchaseOrderOut: The serialized purchase order data.
+    """
     offer = po.offer
     supplier = offer.supplier if offer else None
     item = po.order_item
@@ -83,6 +89,19 @@ def _po_out(po: PurchaseOrder) -> PurchaseOrderOut:
 
 
 def _get_po(db: Session, po_id: int) -> PurchaseOrder:
+    """
+    Retrieve a purchase order by its identifier.
+    
+    Parameters:
+    	db (Session): Database session used to query the purchase order.
+    	po_id (int): Identifier of the purchase order.
+    
+    Returns:
+    	PurchaseOrder: The matching purchase order.
+    
+    Raises:
+    	HTTPException: If no purchase order exists with the specified identifier.
+    """
     po = db.get(PurchaseOrder, po_id)
     if po is None:
         raise HTTPException(status_code=404, detail="أمر الشراء غير موجود")
@@ -93,6 +112,13 @@ def _get_po(db: Session, po_id: int) -> PurchaseOrder:
 
 @router.get("/dashboard", response_model=DashboardOut)
 def dashboard(db: Session = Depends(get_db)) -> DashboardOut:
+    """
+    Summarize operational order, revenue, cost, and margin metrics.
+    
+    Returns:
+        DashboardOut: Aggregated purchase-order counts, today's order count,
+            total revenue, open expected costs, and estimated margin percentage.
+    """
     counts = {s: 0 for s in PO_STATUSES}
     for status_val, n in db.execute(
         select(PurchaseOrder.status, func.count(PurchaseOrder.id)).group_by(PurchaseOrder.status)
@@ -135,6 +161,15 @@ def list_purchase_orders(
     status: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> list[PurchaseOrderOut]:
+    """
+    List purchase orders, optionally filtered by status.
+    
+    Parameters:
+    	status (str | None): Purchase order status used to filter the results.
+    
+    Returns:
+    	list[PurchaseOrderOut]: Up to 200 purchase orders, ordered from newest to oldest.
+    """
     stmt = select(PurchaseOrder).order_by(PurchaseOrder.created_at.desc()).limit(200)
     if status:
         stmt = stmt.where(PurchaseOrder.status == status)
@@ -143,12 +178,32 @@ def list_purchase_orders(
 
 @router.get("/purchase-orders/{po_id}", response_model=PurchaseOrderOut)
 def get_purchase_order(po_id: int, db: Session = Depends(get_db)) -> PurchaseOrderOut:
+    """
+    Retrieve a purchase order by its identifier.
+    
+    Parameters:
+    	po_id (int): The purchase order identifier.
+    
+    Returns:
+    	PurchaseOrderOut: The purchase order details.
+    """
     return _po_out(_get_po(db, po_id))
 
 
 @router.post("/purchase-orders/{po_id}/approve")
 def approve_po(po_id: int, db: Session = Depends(get_db)) -> dict:
-    """Operator approval — hands the PO to the purchasing agent."""
+    """
+    Approve a purchase order and initiate its purchase with the supplier.
+    
+    Args:
+        po_id (int): Identifier of the purchase order.
+    
+    Returns:
+        dict: A mapping containing the updated purchase order under ``po`` and the purchase execution result.
+    
+    Raises:
+        HTTPException: If the purchase order does not exist or is not awaiting approval.
+    """
     po = _get_po(db, po_id)
     if po.status != "awaiting_approval":
         raise HTTPException(status_code=409, detail=f"لا يمكن الموافقة من الحالة '{po.status}'")
@@ -159,6 +214,15 @@ def approve_po(po_id: int, db: Session = Depends(get_db)) -> dict:
 
 @router.post("/purchase-orders/{po_id}/reject", response_model=PurchaseOrderOut)
 def reject_po(po_id: int, payload: RejectIn, db: Session = Depends(get_db)) -> PurchaseOrderOut:
+    """
+    Rejects a purchase order or returns it to sourcing.
+    
+    Parameters:
+        payload (RejectIn): Rejection details, including whether to cancel the order and an optional note.
+    
+    Returns:
+        PurchaseOrderOut: The updated purchase order.
+    """
     po = _get_po(db, po_id)
     target = "cancelled" if payload.cancel else "pending_sourcing"
     fulfillment_service.transition(
@@ -169,7 +233,14 @@ def reject_po(po_id: int, payload: RejectIn, db: Session = Depends(get_db)) -> P
 
 @router.post("/purchase-orders/{po_id}/resource", response_model=PurchaseOrderOut)
 def resource_po(po_id: int, db: Session = Depends(get_db)) -> PurchaseOrderOut:
-    """Re-run sourcing for a pending_sourcing PO (e.g. after adding offers)."""
+    """Re-run sourcing for a purchase order awaiting a suitable supplier offer.
+    
+    Parameters:
+    	po_id (int): The purchase order identifier.
+    	db (Session): The database session.
+    
+    Returns:
+    	PurchaseOrderOut: The purchase order with its sourcing status and details."""
     po = _get_po(db, po_id)
     if po.status not in ("pending_sourcing", "failed"):
         raise HTTPException(status_code=409, detail=f"لا يمكن إعادة التوريد من الحالة '{po.status}'")
@@ -200,6 +271,17 @@ def mark_purchased(po_id: int, payload: MarkPurchasedIn, db: Session = Depends(g
 
 @router.post("/purchase-orders/{po_id}/ship", response_model=PurchaseOrderOut)
 def ship_po(po_id: int, payload: ShipIn, db: Session = Depends(get_db)) -> PurchaseOrderOut:
+    """
+    Record shipping details and mark a purchase order as shipped.
+    
+    Parameters:
+        po_id (int): The purchase order identifier.
+        payload (ShipIn): The tracking number and optional carrier information.
+        db (Session): The database session.
+    
+    Returns:
+        PurchaseOrderOut: The updated purchase order.
+    """
     po = _get_po(db, po_id)
     po.tracking_no = payload.tracking_no
     po.carrier = payload.carrier
@@ -212,6 +294,15 @@ def ship_po(po_id: int, payload: ShipIn, db: Session = Depends(get_db)) -> Purch
 
 @router.post("/purchase-orders/{po_id}/deliver", response_model=PurchaseOrderOut)
 def deliver_po(po_id: int, db: Session = Depends(get_db)) -> PurchaseOrderOut:
+    """
+    Mark a purchase order as delivered.
+    
+    Parameters:
+    	po_id (int): The purchase order identifier.
+    
+    Returns:
+    	PurchaseOrderOut: The updated purchase order.
+    """
     po = _get_po(db, po_id)
     fulfillment_service.transition(db, po, "delivered", actor="operator", note="تم التسليم للعميل")
     return _po_out(po)
@@ -221,11 +312,25 @@ def deliver_po(po_id: int, db: Session = Depends(get_db)) -> PurchaseOrderOut:
 
 @router.get("/suppliers", response_model=list[SupplierOut])
 def list_suppliers(db: Session = Depends(get_db)) -> list[Supplier]:
+    """List suppliers ordered by name.
+    
+    Returns:
+    	list[Supplier]: The available suppliers in alphabetical order.
+    """
     return list(db.scalars(select(Supplier).order_by(Supplier.name)))
 
 
 @router.post("/suppliers", response_model=SupplierOut, status_code=201)
 def create_supplier(payload: SupplierIn, db: Session = Depends(get_db)) -> Supplier:
+    """
+    Create a supplier from the provided details.
+    
+    Parameters:
+    	payload (SupplierIn): Supplier details, including a unique slug.
+    
+    Returns:
+    	Supplier: The persisted supplier.
+    """
     if db.scalar(select(Supplier).where(Supplier.slug == payload.slug)):
         raise HTTPException(status_code=409, detail="slug مستخدم بالفعل")
     supplier = Supplier(**payload.model_dump())
@@ -237,6 +342,13 @@ def create_supplier(payload: SupplierIn, db: Session = Depends(get_db)) -> Suppl
 
 @router.patch("/suppliers/{supplier_id}", response_model=SupplierOut)
 def patch_supplier(supplier_id: int, payload: SupplierPatch, db: Session = Depends(get_db)) -> Supplier:
+    """
+    Partially updates a supplier and returns the updated supplier.
+    
+    Parameters:
+    	supplier_id (int): The supplier's identifier.
+    	payload (SupplierPatch): The fields to update.
+    """
     supplier = db.get(Supplier, supplier_id)
     if supplier is None:
         raise HTTPException(status_code=404, detail="المورد غير موجود")
@@ -254,6 +366,14 @@ def list_offers(
     product_id: int | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> list[SupplierOffer]:
+    """List supplier offers, optionally filtered by product.
+    
+    Parameters:
+    	product_id (int | None): Optional product identifier used to filter the offers.
+    
+    Returns:
+    	list[SupplierOffer]: Up to 500 matching supplier offers.
+    """
     stmt = select(SupplierOffer)
     if product_id:
         stmt = stmt.where(SupplierOffer.product_id == product_id)
@@ -262,6 +382,14 @@ def list_offers(
 
 @router.post("/offers", response_model=OfferOut, status_code=201)
 def create_offer(payload: OfferIn, db: Session = Depends(get_db)) -> SupplierOffer:
+    """Create and persist a supplier offer.
+    
+    Parameters:
+    	payload (OfferIn): The supplier offer data to create.
+    
+    Returns:
+    	SupplierOffer: The newly created supplier offer.
+    """
     offer = SupplierOffer(**payload.model_dump())
     db.add(offer)
     db.commit()
@@ -271,6 +399,16 @@ def create_offer(payload: OfferIn, db: Session = Depends(get_db)) -> SupplierOff
 
 @router.patch("/offers/{offer_id}", response_model=OfferOut)
 def patch_offer(offer_id: int, payload: OfferPatch, db: Session = Depends(get_db)) -> SupplierOffer:
+    """
+    Update the supplied fields of a supplier offer.
+    
+    Parameters:
+        offer_id (int): Identifier of the supplier offer to update.
+        payload (OfferPatch): Fields to change on the offer.
+    
+    Returns:
+        SupplierOffer: The updated supplier offer.
+    """
     offer = db.get(SupplierOffer, offer_id)
     if offer is None:
         raise HTTPException(status_code=404, detail="العرض غير موجود")
@@ -284,6 +422,16 @@ def patch_offer(offer_id: int, payload: OfferPatch, db: Session = Depends(get_db
 # ---------- product management ----------
 
 def _product_out(db: Session, p: Product) -> ProductAdminOut:
+    """
+    Build an administrator-facing product representation with its supplier offer count.
+    
+    Parameters:
+    	db (Session): Database session used to count the product's supplier offers.
+    	p (Product): Product to serialize.
+    
+    Returns:
+    	ProductAdminOut: Product data enriched with the number of associated supplier offers.
+    """
     offer_count = db.scalar(
         select(func.count(SupplierOffer.id)).where(SupplierOffer.product_id == p.id)
     ) or 0
@@ -294,12 +442,27 @@ def _product_out(db: Session, p: Product) -> ProductAdminOut:
 
 @router.get("/products", response_model=list[ProductAdminOut])
 def admin_list_products(db: Session = Depends(get_db)) -> list[ProductAdminOut]:
+    """List up to 500 products for administrative management.
+    
+    Returns:
+    	list[ProductAdminOut]: Products enriched with their supplier offer counts.
+    """
     rows = db.scalars(select(Product).order_by(Product.created_at.desc()).limit(500))
     return [_product_out(db, p) for p in rows]
 
 
 @router.post("/products", response_model=ProductAdminOut, status_code=201)
 def admin_create_product(payload: ProductIn, db: Session = Depends(get_db)) -> ProductAdminOut:
+    """
+    Create a product with a unique slug and return its administrative representation.
+    
+    Parameters:
+        payload (ProductIn): Product details, including an optional slug.
+        db (Session): Database session used to persist the product.
+    
+    Returns:
+        ProductAdminOut: The created product with its supplier-offer count.
+    """
     slug = payload.slug or unique_slug(
         payload.name, lambda s: db.scalar(select(Product).where(Product.slug == s)) is not None
     )
@@ -318,6 +481,17 @@ def admin_create_product(payload: ProductIn, db: Session = Depends(get_db)) -> P
 def admin_patch_product(
     product_id: int, payload: ProductPatch, db: Session = Depends(get_db)
 ) -> ProductAdminOut:
+    """
+    Partially updates an administrator-managed product.
+    
+    Parameters:
+    	product_id (int): The identifier of the product to update.
+    	payload (ProductPatch): The product fields to change.
+    	db (Session): The database session.
+    
+    Returns:
+    	ProductAdminOut: The updated product, including its supplier offer count.
+    """
     product = db.get(Product, product_id)
     if product is None:
         raise HTTPException(status_code=404, detail="المنتج غير موجود")
@@ -333,6 +507,12 @@ def admin_patch_product(
 @router.get("/customers", response_model=list[CustomerOut])
 def admin_list_customers(db: Session = Depends(get_db)) -> list[CustomerOut]:
     # Aggregate order count + spend per customer in one pass.
+    """
+    List customers with their non-cancelled order counts and total spending.
+    
+    Returns:
+    	list[CustomerOut]: Up to 500 customers, ordered by creation date descending, with aggregated order statistics.
+    """
     stats = {
         row.user_id: (row.n, row.spent)
         for row in db.execute(
@@ -370,15 +550,42 @@ def admin_list_customers(db: Session = Depends(get_db)) -> list[CustomerOut]:
 
 @router.get("/analytics", response_model=AnalyticsOut)
 def admin_analytics(days: int = Query(default=30, ge=1, le=365), db: Session = Depends(get_db)) -> AnalyticsOut:
+    """
+    Summarize visitor activity, shopping funnel performance, and conversion metrics for a recent period.
+    
+    Parameters:
+    	days (int): Number of days to include in the analytics window.
+    
+    Returns:
+    	AnalyticsOut: Aggregated visitor, event, funnel, product, search, and daily visitor metrics.
+    """
     since = datetime.now(timezone.utc) - timedelta(days=days)
     ev = AnalyticsEvent
 
     def count(evtype: str) -> int:
+        """
+        Count analytics events of a specified type within the reporting period.
+        
+        Parameters:
+        	evtype (str): Event type to count.
+        
+        Returns:
+        	int: Number of matching events recorded during the reporting period.
+        """
         return db.scalar(
             select(func.count(ev.id)).where(ev.event_type == evtype, ev.created_at >= since)
         ) or 0
 
     def uniq(evtype: str | None = None) -> int:
+        """
+        Count distinct visitor sessions within the analytics time window.
+        
+        Parameters:
+            evtype (str | None): Optional event type used to filter the sessions.
+        
+        Returns:
+            int: Number of distinct sessions matching the filter.
+        """
         stmt = select(func.count(func.distinct(ev.session_id))).where(ev.created_at >= since)
         if evtype:
             stmt = stmt.where(ev.event_type == evtype)
@@ -456,11 +663,28 @@ def admin_analytics(days: int = Query(default=30, ge=1, le=365), db: Session = D
 
 @router.get("/coupons", response_model=list[CouponOut])
 def admin_list_coupons(db: Session = Depends(get_db)) -> list[Coupon]:
+    """List coupons for administrative management.
+    
+    Returns:
+    	list[Coupon]: Coupons ordered from newest to oldest.
+    """
     return list(db.scalars(select(Coupon).order_by(Coupon.created_at.desc())))
 
 
 @router.post("/coupons", response_model=CouponOut, status_code=201)
 def admin_create_coupon(payload: CouponIn, db: Session = Depends(get_db)) -> Coupon:
+    """
+    Create a coupon with a normalized, unique code and supported discount type.
+    
+    Parameters:
+        payload (CouponIn): Coupon details, including the code and discount type.
+    
+    Returns:
+        Coupon: The newly created coupon.
+    
+    Raises:
+        HTTPException: If the code is already in use or the discount type is invalid.
+    """
     code = payload.code.strip().upper()
     if db.scalar(select(Coupon).where(func.upper(Coupon.code) == code)):
         raise HTTPException(status_code=409, detail="كود الخصم مستخدم بالفعل")
@@ -477,6 +701,16 @@ def admin_create_coupon(payload: CouponIn, db: Session = Depends(get_db)) -> Cou
 
 @router.patch("/coupons/{coupon_id}", response_model=CouponOut)
 def admin_patch_coupon(coupon_id: int, payload: CouponPatch, db: Session = Depends(get_db)) -> Coupon:
+    """
+    Update the specified coupon with the provided fields.
+    
+    Parameters:
+    	coupon_id (int): The coupon's identifier.
+    	payload (CouponPatch): Fields to update on the coupon.
+    
+    Returns:
+    	Coupon: The updated coupon.
+    """
     coupon = db.get(Coupon, coupon_id)
     if coupon is None:
         raise HTTPException(status_code=404, detail="كود الخصم غير موجود")
@@ -494,6 +728,15 @@ def admin_list_reviews(
     status: str = Query(default="pending", pattern="^(pending|all)$"),
     db: Session = Depends(get_db),
 ) -> list[Review]:
+    """
+    List reviews for moderation, optionally limited to pending reviews.
+    
+    Parameters:
+        status (str): Review filter, either "pending" or "all".
+    
+    Returns:
+        list[Review]: Reviews ordered by creation time, limited to 500 results.
+    """
     stmt = select(Review).order_by(Review.created_at.desc()).limit(500)
     if status == "pending":
         stmt = stmt.where(Review.is_approved.is_(False))
@@ -502,6 +745,16 @@ def admin_list_reviews(
 
 @router.post("/reviews/{review_id}/approve", response_model=AdminReviewOut)
 def admin_approve_review(review_id: int, db: Session = Depends(get_db)) -> Review:
+    """
+    Approve a customer review for publication.
+    
+    Parameters:
+        review_id (int): The identifier of the review to approve.
+        db (Session): The database session.
+    
+    Returns:
+        Review: The approved review.
+    """
     review = db.get(Review, review_id)
     if review is None:
         raise HTTPException(status_code=404, detail="المراجعة غير موجودة")
@@ -513,6 +766,15 @@ def admin_approve_review(review_id: int, db: Session = Depends(get_db)) -> Revie
 
 @router.post("/reviews/{review_id}/reject")
 def admin_reject_review(review_id: int, db: Session = Depends(get_db)) -> dict:
+    """
+    Delete a review from the moderation queue.
+    
+    Parameters:
+    	review_id (int): The identifier of the review to delete.
+    
+    Returns:
+    	dict: A dictionary containing `{"deleted": True}`.
+    """
     review = db.get(Review, review_id)
     if review is None:
         raise HTTPException(status_code=404, detail="المراجعة غير موجودة")

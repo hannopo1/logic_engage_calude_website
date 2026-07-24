@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Coffee, ShieldCheck, Truck, Wallet } from "lucide-react";
 
+/**
+ * Renders the site footer with brand information, store navigation, service highlights, contact details, and copyright information.
+ */
 export default function Footer() {
   return (
     <footer className="mt-16 border-t border-line bg-white">

@@ -14,6 +14,10 @@ depends_on = None
 
 
 def upgrade() -> None:
+    """Create the initial e-commerce database schema, including tables, constraints, and indexes.
+    
+    The schema includes users, categories, products, carts, cart items, orders, and order items. Products also receive PostgreSQL full-text search support through a generated search vector and GIN index.
+    """
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -117,6 +121,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """
+    Remove all database objects created by the initial schema migration.
+    """
     op.drop_table("order_items")
     op.drop_table("orders")
     op.drop_table("cart_items")

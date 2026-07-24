@@ -6,6 +6,11 @@ import { useState } from "react";
 
 import { api } from "@/lib/api";
 
+/**
+ * Renders a search form that tracks valid queries and navigates to the products results page.
+ *
+ * Whitespace-only queries are ignored.
+ */
 export default function SearchBar() {
   const router = useRouter();
   const [q, setQ] = useState("");

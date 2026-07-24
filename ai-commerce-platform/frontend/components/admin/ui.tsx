@@ -2,6 +2,12 @@
 
 import type { ReactNode } from "react";
 
+/**
+ * Displays a labeled value in a bordered card.
+ *
+ * @param label - The text identifying the value
+ * @param value - The value to display
+ */
 export function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-line bg-white p-4 shadow-card">
@@ -11,6 +17,14 @@ export function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+/**
+ * Renders a button with solid or ghost styling.
+ *
+ * @param children - The content displayed inside the button
+ * @param variant - The button styling variant
+ * @param type - The button's form behavior
+ * @param disabled - Whether the button is disabled
+ */
 export function Btn({
   children,
   onClick,
@@ -40,6 +54,12 @@ export function Btn({
   );
 }
 
+/**
+ * Wraps form content with a visible label.
+ *
+ * @param label - The text displayed above the form content
+ * @param children - The form control or content associated with the label
+ */
 export function Field({
   label,
   children,

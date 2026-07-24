@@ -20,10 +20,29 @@ from app.models.supplier import Supplier, SupplierOffer
 
 
 def landed_cost(offer: SupplierOffer) -> Decimal:
+    """
+    Calculate the total landed cost of a supplier offer.
+    
+    Parameters:
+    	offer (SupplierOffer): The supplier offer whose supplier price and shipping cost are combined.
+    
+    Returns:
+    	Decimal: The supplier price plus the shipping cost.
+    """
     return Decimal(str(offer.supplier_price)) + Decimal(str(offer.shipping_cost))
 
 
 def margin_percent(selling_price: Decimal, cost: Decimal) -> Decimal:
+    """
+    Calculate the gross margin percentage for a selling price and cost.
+    
+    Parameters:
+    	selling_price (Decimal): The item's selling price.
+    	cost (Decimal): The item's cost.
+    
+    Returns:
+    	Decimal: Zero when the selling price is less than or equal to zero; otherwise, the gross margin percentage.
+    """
     if selling_price <= 0:
         return Decimal("0")
     return (selling_price - cost) / selling_price * 100
@@ -32,7 +51,17 @@ def margin_percent(selling_price: Decimal, cost: Decimal) -> Decimal:
 def pick_offer(
     db: Session, product_id: int, selling_unit_price: Decimal
 ) -> tuple[SupplierOffer | None, str]:
-    """Cheapest active offer meeting the margin threshold. Returns (offer, reason)."""
+    """
+    Selects the cheapest active supplier offer that meets the minimum margin requirement.
+    
+    Parameters:
+    	db (Session): Database session used to retrieve supplier offers.
+    	product_id (int): Identifier of the product to source.
+    	selling_unit_price (Decimal): Unit price charged to the customer.
+    
+    Returns:
+    	tuple[SupplierOffer | None, str]: The selected offer and an Arabic status message. Returns `None` with a reason when no active offer exists or no offer meets the minimum margin.
+    """
     offers = list(
         db.scalars(
             select(SupplierOffer)
@@ -66,7 +95,17 @@ def pick_offer(
 
 
 def source_order(db: Session, order: Order, *, commit: bool = True) -> list[PurchaseOrder]:
-    """Create one PO per order item. Called right after checkout."""
+    """
+    Create purchase orders for the order's eligible items.
+    
+    Parameters:
+    	db (Session): Database session used to load order items and persist purchase orders.
+    	order (Order): Order whose items require fulfillment sourcing.
+    	commit (bool): Whether to commit the transaction after processing all items.
+    
+    Returns:
+    	list[PurchaseOrder]: Purchase orders created for the order's items.
+    """
     created: list[PurchaseOrder] = []
     items = list(db.scalars(select(OrderItem).where(OrderItem.order_id == order.id)))
     for item in items:

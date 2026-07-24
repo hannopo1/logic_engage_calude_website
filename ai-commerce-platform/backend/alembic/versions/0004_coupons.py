@@ -14,6 +14,9 @@ depends_on = None
 
 
 def upgrade() -> None:
+    """
+    Create the coupons table and add coupon discount fields to orders.
+    """
     op.create_table(
         "coupons",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -34,6 +37,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """
+    Revert the coupon schema changes from the database.
+    
+    This removes the coupon-related columns from `orders` and drops the `coupons` table.
+    """
     op.drop_column("orders", "coupon_code")
     op.drop_column("orders", "discount_amount")
     op.drop_table("coupons")

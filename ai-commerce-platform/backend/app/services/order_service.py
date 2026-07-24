@@ -29,6 +29,27 @@ def create_order_from_cart(
     payment_method: str = "cod",
     coupon_code: str | None = None,
 ) -> Order:
+    """
+    Create an order from the items in a shopping cart.
+    
+    Parameters:
+        db (Session): Database session used to persist the order and related changes.
+        cart (Cart): Cart whose items are converted into the order.
+        user (User | None): User placing the order, if authenticated.
+        shipping_address (str | None): Address to which the order should be shipped.
+        payment_method (str): Payment method used for authorization.
+        coupon_code (str | None): Optional discount coupon code.
+    
+    Returns:
+        Order: The persisted order with its items and sourcing purchase orders.
+    
+    Raises:
+        HTTPException: With status 400 if the cart is empty or the shipping address
+            is missing.
+        HTTPException: With status 409 if requested product quantities are
+            unavailable.
+        HTTPException: With status 402 if payment authorization is declined.
+    """
     if not cart.items:
         raise HTTPException(status_code=400, detail="السلة فارغة")
     if not shipping_address or not shipping_address.strip():

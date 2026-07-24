@@ -17,7 +17,12 @@ class Base(DeclarativeBase):
 
 
 def get_db() -> Generator[Session, None, None]:
-    """FastAPI dependency yielding a scoped DB session."""
+    """
+    Provide a database session for dependency-managed use and close it afterward.
+    
+    Yields:
+        Session: An active SQLAlchemy database session.
+    """
     db = SessionLocal()
     try:
         yield db

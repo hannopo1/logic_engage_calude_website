@@ -17,6 +17,9 @@ const EMPTY = {
   expires_at: "",
 };
 
+/**
+ * Provides an administrative interface for creating, viewing, and activating or deactivating discount coupons.
+ */
 export default function CouponsSection() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [form, setForm] = useState({ ...EMPTY });

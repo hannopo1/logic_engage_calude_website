@@ -8,10 +8,21 @@ import { api } from "@/lib/api";
 import { fmtDate } from "@/lib/format";
 import type { ReviewBlock } from "@/lib/types";
 
+/**
+ * Determines whether the current client has a stored authentication token.
+ *
+ * @returns `true` if a token is stored in local storage, `false` otherwise.
+ */
 function loggedIn(): boolean {
   return typeof window !== "undefined" && !!localStorage.getItem("token");
 }
 
+/**
+ * Displays product review summaries, a review submission form, and existing reviews.
+ *
+ * @param productId - The product identifier used when submitting a review
+ * @param slug - The product slug used to load reviews
+ */
 export default function ProductReviews({
   productId,
   slug,

@@ -6,6 +6,9 @@ import { api } from "@/lib/api";
 import { fmtDate, fmtEGP } from "@/lib/format";
 import type { Customer } from "@/lib/types";
 
+/**
+ * Displays the administrative customer list with loading and empty states.
+ */
 export default function CustomersSection() {
   const [customers, setCustomers] = useState<Customer[] | null>(null);
 

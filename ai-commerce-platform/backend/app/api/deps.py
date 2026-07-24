@@ -10,6 +10,15 @@ from app.models.user import User
 
 
 def _extract_token(authorization: str | None) -> str | None:
+    """
+    Extracts a bearer token from an Authorization header value.
+    
+    Parameters:
+        authorization (str | None): The Authorization header value.
+    
+    Returns:
+        str | None: The bearer token if the header has the expected format, otherwise None.
+    """
     if not authorization:
         return None
     parts = authorization.split()
@@ -22,7 +31,15 @@ def get_current_user_optional(
     authorization: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ) -> User | None:
-    """Return the authenticated user, or None for anonymous requests."""
+    """
+    Resolve the authenticated user from an optional bearer token.
+    
+    Parameters:
+        authorization: The optional Authorization header containing a bearer token.
+    
+    Returns:
+        The matching User, or None when no valid token is provided or no user is found.
+    """
     token = _extract_token(authorization)
     if not token:
         return None
@@ -35,7 +52,11 @@ def get_current_user_optional(
 def get_current_user(
     user: User | None = Depends(get_current_user_optional),
 ) -> User:
-    """Require an authenticated user."""
+    """Require an authenticated user.
+    
+    Returns:
+    	User: The authenticated user.
+    """
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

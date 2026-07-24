@@ -22,6 +22,20 @@ class OpenAIProvider(AIProvider):
     name = "openai"
 
     def chat(self, message: str, history: list[dict], context: str) -> str:
+        """
+        Generate a shopping assistant response using the provided conversation and catalog context.
+        
+        Parameters:
+            message (str): The customer's question.
+            history (list[dict]): Previous conversation turns.
+            context (str): Catalog and policy information available to the assistant.
+        
+        Returns:
+            str: The assistant's response.
+        
+        Raises:
+            httpx.HTTPStatusError: If the OpenAI API request returns a non-success status.
+        """
         messages = [{"role": "system", "content": _SYSTEM}]
         for turn in history[-6:]:
             role = "assistant" if turn.get("role") == "assistant" else "user"

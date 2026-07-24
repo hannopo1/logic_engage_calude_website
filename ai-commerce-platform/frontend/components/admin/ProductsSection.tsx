@@ -7,6 +7,9 @@ import { fmtEGP } from "@/lib/format";
 import type { Offer, ProductAdmin, Supplier } from "@/lib/types";
 import { Btn, Field, inputCls } from "./ui";
 
+/**
+ * Displays the admin product list and provides controls for adding products and managing dropshipping offers.
+ */
 export default function ProductsSection() {
   const [products, setProducts] = useState<ProductAdmin[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -95,6 +98,11 @@ export default function ProductsSection() {
   );
 }
 
+/**
+ * Renders a form for creating a product.
+ *
+ * @param onCreated - Callback invoked after the product is created successfully.
+ */
 function AddProductForm({ onCreated }: { onCreated: () => void }) {
   const [f, setF] = useState({
     name: "",
@@ -175,6 +183,13 @@ function AddProductForm({ onCreated }: { onCreated: () => void }) {
   );
 }
 
+/**
+ * Displays and manages supplier offers for a product.
+ *
+ * @param productId - The product whose supplier offers are managed
+ * @param suppliers - Suppliers available for offer selection
+ * @param onChange - Callback invoked after an offer is added
+ */
 function OffersEditor({
   productId,
   suppliers,

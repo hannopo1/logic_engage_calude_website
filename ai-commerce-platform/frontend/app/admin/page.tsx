@@ -30,6 +30,11 @@ const NAV: { key: Section; label: string }[] = [
   { key: "suppliers", label: "الموردون" },
 ];
 
+/**
+ * Displays the authenticated admin dashboard and its available management sections.
+ *
+ * @returns The admin dashboard, a loading indicator, or an access-denied view.
+ */
 export default function AdminPage() {
   const [ok, setOk] = useState<boolean | null>(null);
   const [section, setSection] = useState<Section>("orders");

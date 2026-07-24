@@ -15,6 +15,11 @@ depends_on = None
 
 def upgrade() -> None:
     # --- payment method on orders (COD-first launch) ---
+    """
+    Apply the database schema changes required for dropshipping workflows.
+    
+    Adds order payment method support, creates supplier, supplier offer, purchase order, and purchase order event tables, and configures Arabic-friendly full-text search for products.
+    """
     op.add_column(
         "orders",
         sa.Column("payment_method", sa.String(20), nullable=False, server_default="cod"),
@@ -114,6 +119,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """
+    Revert the dropshipping schema changes and restore the original product search configuration.
+    """
     op.execute("DROP INDEX IF EXISTS ix_products_search_vector")
     op.execute("ALTER TABLE products DROP COLUMN search_vector")
     op.execute(

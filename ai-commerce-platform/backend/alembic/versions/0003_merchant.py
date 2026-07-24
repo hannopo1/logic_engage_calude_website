@@ -14,6 +14,12 @@ depends_on = None
 
 
 def upgrade() -> None:
+    """
+    Apply the merchant console schema changes.
+    
+    Adds a required fulfillment type to products and creates the analytics_events
+    table with indexes for event type, session, and creation time.
+    """
     op.add_column(
         "products",
         sa.Column("fulfillment_type", sa.String(20), nullable=False, server_default="dropship"),
@@ -36,5 +42,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """
+    Revert the merchant console schema changes introduced by this migration.
+    """
     op.drop_table("analytics_events")
     op.drop_column("products", "fulfillment_type")

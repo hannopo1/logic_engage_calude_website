@@ -13,7 +13,19 @@ from app.models.coupon import Coupon
 
 
 def find_valid(db: Session, code: str, subtotal: Decimal) -> Coupon:
-    """Return the coupon if it is valid for this subtotal, else raise 400/404."""
+    """
+    Validate a coupon code for the specified order subtotal.
+    
+    Parameters:
+        code (str): Coupon code to validate.
+        subtotal (Decimal): Order subtotal used to check the coupon's minimum requirement.
+    
+    Returns:
+        Coupon: The valid coupon.
+    
+    Raises:
+        HTTPException: If the coupon is not found or fails activation, expiration, usage-limit, or minimum-order checks.
+    """
     code = (code or "").strip().upper()
     coupon = db.scalar(select(Coupon).where(func.upper(Coupon.code) == code))
     if coupon is None:
@@ -33,7 +45,16 @@ def find_valid(db: Session, code: str, subtotal: Decimal) -> Coupon:
 
 
 def compute_discount(coupon: Coupon, subtotal: Decimal) -> Decimal:
-    """Discount amount, never exceeding the subtotal."""
+    """
+    Calculate the discount amount for a coupon and subtotal.
+    
+    Parameters:
+        coupon (Coupon): Coupon defining the discount type and value.
+        subtotal (Decimal): Order subtotal used to calculate the discount.
+    
+    Returns:
+        Decimal: Discount rounded to two decimal places and capped at the subtotal.
+    """
     if coupon.kind == "fixed":
         disc = Decimal(str(coupon.value))
     else:  # percent

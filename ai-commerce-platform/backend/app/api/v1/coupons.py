@@ -15,6 +15,15 @@ router = APIRouter()
 
 @router.post("/validate", response_model=CouponValidateOut)
 def validate(payload: CouponValidateIn, db: Session = Depends(get_db)) -> CouponValidateOut:
+    """
+    Validate a coupon for a storefront subtotal and calculate the resulting discount and total.
+    
+    Parameters:
+        payload (CouponValidateIn): Coupon code and purchase subtotal to validate.
+    
+    Returns:
+        CouponValidateOut: Coupon details, discount amount, and total after applying the discount.
+    """
     subtotal = Decimal(str(payload.subtotal))
     coupon = coupon_service.find_valid(db, payload.code, subtotal)  # raises 400/404 if invalid
     discount = coupon_service.compute_discount(coupon, subtotal)

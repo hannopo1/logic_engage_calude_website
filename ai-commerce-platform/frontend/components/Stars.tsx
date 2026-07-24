@@ -3,7 +3,13 @@
 import { Star } from "lucide-react";
 import { useState } from "react";
 
-/** Read-only star display (supports halves via fill width). */
+/**
+ * Displays a read-only five-star rating.
+ *
+ * @param value - The rating used to determine how many stars appear filled.
+ * @param size - The width and height of each star icon.
+ * @returns A five-star rating visualization.
+ */
 export function Stars({ value, size = 16 }: { value: number; size?: number }) {
   const full = Math.round(value); // simple rounded display
   return (
@@ -19,7 +25,12 @@ export function Stars({ value, size = 16 }: { value: number; size?: number }) {
   );
 }
 
-/** Interactive star picker for the review form. */
+/**
+ * Provides an interactive five-star rating selector with hover preview.
+ *
+ * @param value - The currently selected rating.
+ * @param onChange - Called with the selected star value.
+ */
 export function StarInput({
   value,
   onChange,

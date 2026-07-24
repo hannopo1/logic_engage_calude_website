@@ -39,6 +39,16 @@ class SupplierConnector:
     slug: str = "base"
 
     def place_order(self, po: PurchaseOrder, ship_to: str) -> PurchaseResult:
+        """
+        Place a purchase order through the connector.
+        
+        Parameters:
+            po (PurchaseOrder): Purchase order to execute.
+            ship_to (str): Shipping address for the order.
+        
+        Raises:
+            NotConfiguredError: Always, because this base connector has no order implementation.
+        """
         raise NotConfiguredError(f"Connector '{self.slug}' is not configured")
 
 
@@ -48,6 +58,16 @@ class SimulationConnector(SupplierConnector):
     slug = "simulation"
 
     def place_order(self, po: PurchaseOrder, ship_to: str) -> PurchaseResult:
+        """
+        Simulate placing a purchase order without contacting an external supplier.
+        
+        Parameters:
+        	po (PurchaseOrder): The purchase order to simulate.
+        	ship_to (str): The shipping destination.
+        
+        Returns:
+        	PurchaseResult: A successful result with a generated simulation reference.
+        """
         ref = f"SIM-{uuid.uuid4().hex[:10].upper()}"
         return PurchaseResult(ok=True, supplier_order_ref=ref, detail="محاكاة — لم يُنفق مال حقيقي")
 
@@ -84,6 +104,11 @@ class AmazonBusinessConnector(SupplierConnector):
     slug = "amazon-eg"
 
     def _configured(self) -> bool:
+        """Determine whether the Amazon Business connector has all required settings.
+        
+        Returns:
+        	bool: `True` if all required Amazon Business credentials and API settings are configured, `False` otherwise.
+        """
         return bool(
             settings.AMAZON_BUSINESS_CLIENT_ID
             and settings.AMAZON_BUSINESS_CLIENT_SECRET
@@ -92,10 +117,10 @@ class AmazonBusinessConnector(SupplierConnector):
         )
 
     def _get_access_token(self) -> str:
-        """Exchange the refresh token for a short-lived access token (LWA OAuth2).
-
-        This is the standard, documented Login-with-Amazon flow and is complete;
-        it needs only your real client id/secret + refresh token.
+        """Exchange the configured OAuth2 refresh token for an access token.
+        
+        Returns:
+            str: The access token.
         """
         resp = httpx.post(
             settings.AMAZON_BUSINESS_TOKEN_URL,
@@ -112,13 +137,15 @@ class AmazonBusinessConnector(SupplierConnector):
         return resp.json()["access_token"]
 
     def _submit_order(self, access_token: str, po: PurchaseOrder, ship_to: str) -> str:
-        """Place the actual order and return the Amazon order reference.
-
-        FILL THIS IN per your Amazon Business integration type. The shape below
-        is a documented starting point for the API path — adjust the endpoint,
-        payload, and response parsing to match the docs Amazon gives you after
-        approval. `po.offer.external_sku` / `po.offer.url` hold the item ASIN or
-        product URL you saved on the supplier offer.
+        """Define the Amazon Business order-submission hook.
+        
+        Parameters:
+            access_token (str): OAuth2 access token for the Amazon Business API.
+            po (PurchaseOrder): Purchase order to submit.
+            ship_to (str): Shipping address for the order.
+        
+        Raises:
+            NotConfiguredError: Always, because order submission is not implemented.
         """
         raise NotConfiguredError(
             "Amazon Business order submission not implemented yet — fill in "
@@ -145,6 +172,19 @@ class AmazonBusinessConnector(SupplierConnector):
         # return resp.json()["orderId"]
 
     def place_order(self, po: PurchaseOrder, ship_to: str) -> PurchaseResult:
+        """
+        Place an order through the Amazon Business API.
+        
+        Parameters:
+            po (PurchaseOrder): Purchase order to submit.
+            ship_to (str): Shipping address for the order.
+        
+        Returns:
+            PurchaseResult: Successful purchase result containing the supplier order reference.
+        
+        Raises:
+            NotConfiguredError: If Amazon Business API credentials are not configured or order submission is unavailable.
+        """
         if not self._configured():
             raise NotConfiguredError(
                 "Amazon Business API credentials are not set. Fill AMAZON_BUSINESS_* "
@@ -206,14 +246,37 @@ class ApiDropshipConnector(SupplierConnector):
     slug = "api-dropship"
 
     def _configured(self) -> bool:
+        """Determine whether the drop-shipping API has the required configuration.
+        
+        Returns:
+        	bool: `True` if the API base URL and API key are configured, `False` otherwise.
+        """
         return bool(settings.DROPSHIP_API_BASE and settings.DROPSHIP_API_KEY)
 
     def _auth_headers(self) -> dict[str, str]:
+        """Builds authentication headers for the configured dropship API.
+        
+        Returns:
+        	dict[str, str]: An ``X-Api-Key`` header when configured for API-key authentication; otherwise, a Bearer authorization header.
+        """
         if settings.DROPSHIP_API_AUTH_STYLE.lower() == "x-api-key":
             return {"X-Api-Key": settings.DROPSHIP_API_KEY}
         return {"Authorization": f"Bearer {settings.DROPSHIP_API_KEY}"}
 
     def place_order(self, po: PurchaseOrder, ship_to: str) -> PurchaseResult:
+        """
+        Place a purchase order through the configured drop-shipping supplier API.
+        
+        Parameters:
+            po (PurchaseOrder): Purchase order containing the item, quantity, and cost limit.
+            ship_to (str): Shipping address supplied to the drop-shipping provider.
+        
+        Returns:
+            PurchaseResult: Successful result containing the supplier's order reference.
+        
+        Raises:
+            NotConfiguredError: If the supplier API is not configured or the response lacks an order reference.
+        """
         if not self._configured():
             raise NotConfiguredError(
                 "Drop-ship supplier API not configured. Fill DROPSHIP_API_* in .env "
@@ -252,7 +315,18 @@ class ApiDropshipConnector(SupplierConnector):
         return PurchaseResult(ok=True, supplier_order_ref=str(ref), detail="تم الشراء عبر API المورد")
 
     def get_tracking(self, order_ref: str) -> dict:
-        """Optional: fetch order status/tracking. Adjust field names to your API."""
+        """
+        Fetch the current status and tracking details for a drop-ship order.
+        
+        Parameters:
+            order_ref (str): Supplier-assigned order reference.
+        
+        Returns:
+            dict: Supplier response containing the order status and tracking details.
+        
+        Raises:
+            NotConfiguredError: If the drop-ship supplier API is not configured.
+        """
         if not self._configured():
             raise NotConfiguredError("Drop-ship supplier API not configured.")
         resp = httpx.get(
@@ -280,4 +354,12 @@ _REGISTRY: dict[str, SupplierConnector] = {
 
 
 def get_connector(slug: str) -> SupplierConnector | None:
+    """Retrieve the registered supplier connector for a slug.
+    
+    Parameters:
+    	slug (str): The connector identifier.
+    
+    Returns:
+    	SupplierConnector | None: The registered connector, or `None` if no connector matches the slug.
+    """
     return _REGISTRY.get(slug)

@@ -149,6 +149,11 @@ DEMO_ORDERS = [
 
 
 def run() -> None:
+    """
+    Seed the database with the demo catalog, suppliers, offers, users, and completed orders.
+    
+    The operation is skipped when the catalog already contains a product. Demo users are created only when their email addresses are absent.
+    """
     db = SessionLocal()
     try:
         if db.scalar(select(Product).limit(1)):
