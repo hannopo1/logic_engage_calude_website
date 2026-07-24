@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>كيڤ برو — نسخة تجريبية محلية (Standalone)</title>
+<style>
+  :root{ --brand:#6b4226; --brand-dark:#3f2417; --bg:#faf8f5; --line:#e7e2dc; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:"Segoe UI",Tahoma,Arial,sans-serif; background:var(--bg); color:#2a2320; }
+  a{ color:var(--brand); }
+  header{ position:sticky; top:0; z-index:40; background:#fffefc; border-bottom:1px solid var(--line); }
+  nav{ max-width:1050px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; gap:12px; flex-wrap:wrap; }
+  .brand{ font-weight:800; color:var(--brand); font-size:20px; cursor:pointer; }
+  nav .links{ display:flex; gap:16px; align-items:center; font-size:14px; }
+  nav .links a{ cursor:pointer; text-decoration:none; color:#4a413b; }
+  nav .links a:hover{ color:var(--brand); }
+  .badge{ background:var(--brand); color:#fff; border-radius:999px; font-size:11px; padding:1px 7px; margin-inline-start:4px; }
+  main{ max-width:1050px; margin:0 auto; padding:20px 16px 80px; }
+  .btn{ background:var(--brand); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-weight:600; cursor:pointer; font-size:14px; }
+  .btn:hover{ background:var(--brand-dark); }
+  .btn.ghost{ background:#fff; color:#4a413b; border:1px solid var(--line); }
+  .btn.sm{ padding:6px 10px; font-size:13px; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  input,select,textarea{ width:100%; padding:9px; border:1px solid #d8d0c8; border-radius:8px; font-size:14px; font-family:inherit; background:#fff; }
+  label{ display:block; font-size:13px; font-weight:600; margin-bottom:4px; }
+  .field{ margin-bottom:12px; }
+  .grid{ display:grid; gap:16px; }
+  .cards{ grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); }
+  .card{ background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+  .card .thumb{ height:130px; display:flex; align-items:center; justify-content:center; background:#f3efe9; font-size:44px; }
+  .card .body{ padding:12px; }
+  .price{ color:var(--brand); font-weight:800; font-size:18px; }
+  .hero{ background:linear-gradient(135deg,var(--brand),var(--brand-dark)); color:#fff; border-radius:16px; padding:44px 20px; text-align:center; margin-bottom:24px; }
+  .hero h1{ margin:0 0 10px; font-size:30px; }
+  .hero p{ opacity:.92; max-width:560px; margin:0 auto 16px; }
+  table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:14px; }
+  th,td{ padding:11px; text-align:right; border-bottom:1px solid #f0ebe4; }
+  th{ background:#f6f2ec; color:#6b615a; font-weight:700; }
+  .pill{ background:#f0ebe4; border-radius:999px; padding:2px 9px; font-size:12px; white-space:nowrap; }
+  .tabbar{ display:flex; flex-wrap:wrap; gap:8px; border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:18px; }
+  .tabbar button{ border:none; background:transparent; border-radius:999px; padding:7px 15px; font-weight:600; font-size:14px; cursor:pointer; color:#4a413b; }
+  .tabbar button.active{ background:var(--brand); color:#fff; }
+  .stat{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .stat .l{ font-size:12px; color:#8a7f76; } .stat .v{ font-size:20px; font-weight:800; color:var(--brand); margin-top:4px; }
+  .box{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .note{ font-size:12px; color:#8a7f76; }
+  .banner{ background:#eefaef; color:#1f7a34; border-radius:8px; padding:10px 12px; font-size:14px; margin-bottom:14px; }
+  .banner.warn{ background:#fff7e6; color:#9a6b00; }
+  .funnel .row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .funnel .lab{ width:110px; font-size:13px; color:#5a514a; flex:none; }
+  .funnel .bar{ flex:1; background:#f0ebe4; border-radius:6px; overflow:hidden; height:24px; }
+  .funnel .fill{ background:var(--brand); color:#fff; height:24px; display:flex; align-items:center; justify-content:flex-end; padding:0 8px; font-size:12px; font-weight:600; border-radius:6px; }
+  .modal{ position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; padding:16px; z-index:60; }
+  .modal .inner{ background:#fff; border-radius:14px; padding:22px; max-width:440px; width:100%; max-height:90vh; overflow:auto; }
+  .steps{ list-style:none; padding:0; margin:0; }
+  .steps li{ display:flex; gap:10px; align-items:flex-start; margin-bottom:16px; }
+  .steps .dot{ width:24px; height:24px; border-radius:999px; flex:none; display:flex; align-items:center; justify-content:center; font-size:12px; border:1px solid #d8d0c8; color:#b3a99f; }
+  .steps .dot.done{ background:#2e9e4a; color:#fff; border-color:#2e9e4a; }
+  .rowflex{ display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+  .muted{ color:#8a7f76; }
+  .qbtn{ width:30px; height:30px; border:1px solid #d8d0c8; border-radius:6px; background:#fff; cursor:pointer; }
+  hr{ border:none; border-top:1px solid var(--line); margin:18px 0; }
+</style>
+</head>
+<body>
+<header>
+  <nav>
+    <div class="brand" onclick="go('home')">☕ كيڤ برو <span class="note">(نسخة تجريبية محلية)</span></div>
+    <div class="links">
+      <a onclick="go('products')">المتجر</a>
+      <a onclick="go('orders')">طلباتي</a>
+      <a id="nav-admin" onclick="go('admin')" style="display:none">الإدارة</a>
+      <a onclick="go('cart')">السلة<span id="cart-badge" class="badge" style="display:none">0</span></a>
+      <a id="nav-auth" onclick="go('login')">دخول</a>
+    </div>
+  </nav>
+</header>
+<main id="view"></main>
+
+<script>
+/* ============================================================
+   CaveBrew — standalone local demo (no backend, localStorage only)
+   Concept demo of the AI-commerce drop-shipping platform:
+   storefront + merchant admin, own-inventory + drop-ship from ANY
+   store (Noon/OLX/Jumia/…), COD checkout, orders, analytics, and
+   login (admin + Google). Data persists in your browser.
+   ============================================================ */
+
+/* ---- Real Google Sign-In (optional) -------------------------------------
+   To enable REAL Google login instead of the demo one:
+   1) Create an OAuth 2.0 Client ID (type: Web) in Google Cloud Console.
+   2) Add your serving origin (e.g. http://localhost:5500) to "Authorized
+      JavaScript origins". NOTE: this does NOT work from a file:// page —
+      you must serve the file over http(s), e.g.  `python -m http.server`.
+   3) Paste the client id below and reload while served over http.
+   When empty (default), a clearly-labeled DEMO Google login is used so the
+   standalone file works fully offline. -------------------------------------*/
+const GOOGLE_CLIENT_ID = ""; // e.g. "1234567890-abc.apps.googleusercontent.com"
+
+const MARGIN_MIN = 15;        // minimum gross margin % the sourcing agent accepts
+const LS_KEY = "cavebrew_demo_v1";
+
+/* ---------------- storage ---------------- */
+let db;
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(db)); }
+function load(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(raw){ db = JSON.parse(raw); return; }
+  db = seed(); save();
+}
+function reset(){ localStorage.removeItem(LS_KEY); load(); go('home'); }
+
+function seed(){
+  const p = (id,name,price,type,opts={}) => ({
+    id, name, price, type,
+    stock: opts.stock ?? (type==='own_stock'?20:999),
+    cost: opts.cost ?? null, tags: opts.tags||"", desc: opts.desc||"", active:true,
+    offers: opts.offers||[]
+  });
+  return {
+    seq:{ product:100, order:1000, po:5000, user:10 },
+    config:{ agentMode:"assisted" },
+    session:null, cart:{},
+    users:[
+      { id:1, email:"admin@example.com", name:"مشغّل المنصة", role:"admin", pass:"admin1234" },
+      { id:2, email:"demo@example.com", name:"عميل تجريبي", role:"customer", pass:"demo1234" },
+    ],
+    products:[
+      p(1,"ماكينة إسبريسو باريستا برو",36500,"dropship",{tags:"اسبريسو,ماكينة",desc:"غلايتان وتحكم PID",offers:[
+        {supplier:"أمازون مصر",url:"https://www.amazon.eg/dp/ESP001",cost:27500,ship:150},
+        {supplier:"نون مصر",url:"https://www.noon.com/p/esp001",cost:28900,ship:0}]}),
+      p(2,"مطحنة قهوة احترافية",9200,"dropship",{tags:"مطحنة,طحن",desc:"شفرات مخروطية 40مم",offers:[
+        {supplier:"نون مصر",url:"https://www.noon.com/p/grd001",cost:6900,ship:0},
+        {supplier:"أولكس مصر",url:"https://www.dubizzle.com.eg/ad/grd001",cost:5800,ship:120}]}),
+      p(3,"قمع ترشيح V60",1150,"dropship",{tags:"ترشيح,v60",desc:"سيراميك كوب واحد",offers:[
+        {supplier:"جوميا مصر",url:"https://www.jumia.com.eg/brw001.html",cost:820,ship:60}]}),
+      p(4,"تيشيرت كيڤ برو",450,"own_stock",{stock:25,cost:180,tags:"تيشيرت,merch",desc:"قطن 100%"}),
+    ],
+    orders:[], pos:[], events:[]
+  };
+}
+
+/* ---------------- helpers ---------------- */
+const egp = n => (Number(n)||0).toLocaleString('ar-EG',{maximumFractionDigits:2})+" ج.م";
+const nid = k => (++db.seq[k]);
+const me = () => db.session ? db.users.find(u=>u.id===db.session) : null;
+const isAdmin = () => me()?.role==='admin';
+function sessionId(){ let s=localStorage.getItem('cb_sid'); if(!s){ s='s'+Math.random().toString(36).slice(2); localStorage.setItem('cb_sid',s);} return s; }
+function track(type,extra={}){ db.events.push(Object.assign({type, sid:sessionId(), uid:db.session, ts:Date.now()}, extra)); save(); }
+function landed(o){ return Number(o.cost)+Number(o.ship||0); }
+function marginPct(sell,cost){ return sell<=0?0:((sell-cost)/sell*100); }
+
+/* ---------------- cart ---------------- */
+function cartKey(){ return db.session? 'u'+db.session : sessionId(); }
+function cart(){ db.cart=db.cart||{}; const k=cartKey(); db.cart[k]=db.cart[k]||[]; return db.cart[k]; }
+function cartAdd(pid){ const c=cart(); const it=c.find(x=>x.pid===pid); if(it) it.qty++; else c.push({pid,qty:1}); track('add_to_cart',{pid}); save(); renderNav(); }
+function cartQty(pid,delta){ const c=cart(); const it=c.find(x=>x.pid===pid); if(!it)return; it.qty+=delta; if(it.qty<=0){ c.splice(c.indexOf(it),1);} save(); }
+function cartCount(){ return cart().reduce((s,x)=>s+x.qty,0); }
+function cartClear(){ db.cart[cartKey()]=[]; save(); }
+
+/* ---------------- sourcing + fulfillment agents ---------------- */
+function addEv(po,status,note,actor){ po.events.push({status,note,actor,ts:Date.now()}); }
+function sourceOrder(order){
+  order.items.forEach(it=>{
+    const prod = db.products.find(p=>p.id===it.pid);
+    const po = { id:nid('po'), orderId:order.id, product:it.name, qty:it.qty, sell:it.price*it.qty,
+                 supplier:null, url:null, expected:null, ref:null, tracking:null, events:[] };
+    if(prod && prod.type==='own_stock'){
+      po.status='purchased'; po.supplier='مخزونك الخاص'; po.expected=(prod.cost||0)*it.qty;
+      addEv(po,'purchased','من مخزونك الخاص — جاهز للشحن','agent');
+    } else {
+      const offers=(prod?.offers||[]).slice().sort((a,b)=>landed(a)-landed(b));
+      const viable=offers.filter(o=> marginPct(it.price, landed(o)) >= MARGIN_MIN);
+      if(viable.length){
+        const o=viable[0]; po.status='awaiting_approval'; po.supplier=o.supplier; po.url=o.url; po.expected=landed(o)*it.qty;
+        addEv(po,'awaiting_approval',`اختير أرخص مورد يحقق الهامش (${marginPct(it.price,landed(o)).toFixed(1)}%): ${o.supplier}`,'agent');
+      } else {
+        po.status='pending_sourcing'; const best=offers[0];
+        addEv(po,'pending_sourcing', best? `أفضل هامش متاح ${marginPct(it.price,landed(best)).toFixed(1)}% < ${MARGIN_MIN}% — يحتاج قرار`:'لا عروض توريد','agent');
+      }
+    }
+    db.pos.push(po);
+  });
+  save();
+}
+const ALLOWED={ pending_sourcing:['awaiting_approval','cancelled'], awaiting_approval:['purchasing','purchased','cancelled'],
+  purchasing:['purchased','cancelled'], purchased:['shipped'], shipped:['delivered'], delivered:[], cancelled:[] };
+function poTransition(po,to,note,actor){ if(!ALLOWED[po.status]?.includes(to)){ alert('انتقال غير مسموح'); return; } po.status=to; addEv(po,to,note,actor||'operator'); syncOrder(po.orderId); save(); }
+function approve(po){
+  addEv(po,po.status,'وافق المشغّل','operator');
+  if(db.config.agentMode==='simulation'){
+    po.status='purchased'; po.ref='SIM-'+Math.random().toString(36).slice(2,10).toUpperCase();
+    addEv(po,'purchased','تم الشراء آلياً (محاكاة)','agent'); syncOrder(po.orderId); save();
+  } else { poTransition(po,'purchasing','حزمة الشراء جاهزة للمشغّل','agent'); }
+}
+function syncOrder(orderId){
+  const o=db.orders.find(x=>x.id===orderId); if(!o)return;
+  const ps=db.pos.filter(p=>p.orderId===orderId && p.status!=='cancelled');
+  if(!ps.length){ o.status='cancelled'; return; }
+  if(ps.every(p=>p.status==='delivered')){ o.status='completed'; o.payment='paid'; }
+  else if(ps.every(p=>['shipped','delivered'].includes(p.status))) o.status='shipped';
+  else if(ps.some(p=>['purchasing','purchased','shipped','delivered'].includes(p.status))) o.status='processing';
+  else o.status='pending';
+}
+
+/* ---------------- auth ---------------- */
+function loginAdmin(email,pass){ const u=db.users.find(x=>x.email===email&&x.pass===pass); if(!u){alert('بيانات خاطئة');return;} db.session=u.id; save(); go(u.role==='admin'?'admin':'home'); }
+function googleDemo(){
+  const name = prompt('اسمك (تسجيل تجريبي عبر Google):','زائر جوجل'); if(name===null) return;
+  const email = (prompt('بريدك:','visitor@gmail.com')||'visitor@gmail.com').trim();
+  let u=db.users.find(x=>x.email===email);
+  if(!u){ u={ id:nid('user'), email, name:name||'زائر', role:'customer', pass:null, google:true }; db.users.push(u); }
+  db.session=u.id; save(); go('home');
+}
+function logout(){ db.session=null; save(); go('home'); }
+function handleGoogleCredential(resp){
+  try{ const p=JSON.parse(atob(resp.credential.split('.')[1]));
+    let u=db.users.find(x=>x.email===p.email);
+    if(!u){ u={ id:nid('user'), email:p.email, name:p.name||p.email, role:'customer', pass:null, google:true }; db.users.push(u); }
+    db.session=u.id; save(); go('home');
+  }catch(e){ alert('تعذّر تسجيل الدخول عبر Google'); }
+}
+
+/* ---------------- router ---------------- */
+function go(v,arg){ location.hash = arg!=null? (v+'/'+arg) : v; }
+window.addEventListener('hashchange', render);
+function render(){
+  const parts=(location.hash.replace('#','')||'home').split('/'); const v=parts[0], arg=parts[1];
+  renderNav();
+  const el=document.getElementById('view');
+  if(v==='admin' && !isAdmin()){ el.innerHTML=viewAdminGate(); return; }
+  const map={ home:viewHome, products:viewProducts, product:()=>viewProduct(+arg), cart:viewCart,
+    checkout:viewCheckout, orders:viewOrders, order:()=>viewOrder(+arg), login:viewLogin, admin:viewAdmin };
+  el.innerHTML = (map[v]||viewHome)();
+  if(v==='home'||v==='products') track('page_view',{path:'/'+v});
+  if(v==='product') track('product_view',{pid:+arg});
+  if(v==='login' && GOOGLE_CLIENT_ID) initRealGoogle();
+}
+function renderNav(){
+  document.getElementById('nav-admin').style.display = isAdmin()?'inline':'none';
+  const a=document.getElementById('nav-auth'); const u=me();
+  a.textContent = u? ('خروج ('+ (u.name?u.name.split(' ')[0]:'') +')') : 'دخول';
+  a.onclick = u? logout : ()=>go('login');
+  const c=cartCount(); const b=document.getElementById('cart-badge');
+  b.style.display=c?'inline':'none'; b.textContent=c;
+}
+
+/* ---------------- storefront ---------------- */
+function pcard(p){ return `<div class="card"><div class="thumb">${p.type==='own_stock'?'👕':'☕'}</div>
+  <div class="body"><div style="min-height:38px;font-weight:600;cursor:pointer" onclick="go('product',${p.id})">${p.name}</div>
+  <div class="price">${egp(p.price)}</div>
+  <button class="btn sm" style="width:100%;margin-top:8px" onclick="cartAdd(${p.id})">أضف للسلة</button></div></div>`; }
+function viewHome(){
+  const feat=db.products.filter(p=>p.active).slice(0,8).map(pcard).join('');
+  return `<div class="hero"><h1>اصنع قهوة أفضل.</h1><p>بن مختص وأدوات دقيقة — توصيل لكل مصر والدفع عند الاستلام.</p>
+    <button class="btn" onclick="go('products')">تصفّح المنتجات</button></div>
+    <h2>منتجات مميزة</h2><div class="grid cards">${feat}</div>`;
+}
+function viewProducts(){
+  const q=(window._q||'').trim();
+  let list=db.products.filter(p=>p.active);
+  if(q) list=list.filter(p=>(p.name+' '+p.tags+' '+p.desc).includes(q));
+  const box=`<div style="margin-bottom:16px"><input placeholder="ابحث… ثم Enter" value="${q}"
+     onkeydown="if(event.key==='Enter'){window._q=this.value;track('search',{q:this.value});render()}"></div>`;
+  return box + `<h2>المنتجات</h2><div class="grid cards">${list.map(pcard).join('')||'<p class="muted">لا نتائج</p>'}</div>`;
+}
+function viewProduct(id){
+  const p=db.products.find(x=>x.id===id); if(!p) return '<p>غير موجود</p>';
+  const sim=db.products.filter(x=>x.id!==id && x.active).slice(0,4).map(pcard).join('');
+  return `<div class="grid" style="grid-template-columns:1fr 1fr;gap:24px">
+     <div class="card"><div class="thumb" style="height:280px;font-size:90px">${p.type==='own_stock'?'👕':'☕'}</div></div>
+     <div><h1>${p.name}</h1><div class="price" style="font-size:24px">${egp(p.price)}</div>
+     <p class="muted">${p.desc||''}</p>
+     <button class="btn" onclick="cartAdd(${p.id});alert('تمت الإضافة للسلة')">أضف للسلة</button></div></div>
+     <h2 style="margin-top:28px">منتجات مشابهة</h2><div class="grid cards">${sim}</div>`;
+}
+function viewCart(){
+  const c=cart(); if(!c.length) return `<h1>السلة</h1><p class="muted">سلتك فارغة.</p><a onclick="go('products')">تصفّح المنتجات</a>`;
+  let sub=0;
+  const rows=c.map(it=>{ const p=db.products.find(x=>x.id===it.pid); const line=p.price*it.qty; sub+=line;
+    return `<tr><td>${p.name}</td><td>${egp(p.price)}</td>
+      <td><button class="qbtn" onclick="cartQty(${it.pid},-1);render()">−</button>
+      <span style="padding:0 8px">${it.qty}</span>
+      <button class="qbtn" onclick="cartQty(${it.pid},1);render()">+</button></td>
+      <td>${egp(line)}</td><td><a onclick="cartQty(${it.pid},-999);render()" style="color:#b42318;cursor:pointer">حذف</a></td></tr>`; }).join('');
+  return `<h1>السلة</h1><table><tr><th>المنتج</th><th>السعر</th><th>الكمية</th><th>الإجمالي</th><th></th></tr>${rows}</table>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+    <span>الإجمالي: <b class="price">${egp(sub)}</b></span><button class="btn" onclick="go('checkout')">إتمام الشراء</button></div>`;
+}
+function viewCheckout(){
+  const c=cart(); if(!c.length) return `<p class="muted">السلة فارغة</p>`;
+  let sub=c.reduce((s,it)=>s+db.products.find(p=>p.id===it.pid).price*it.qty,0);
+  return `<div class="box" style="max-width:460px;margin:auto"><h1>إتمام الشراء</h1>
+    <p class="muted">الإجمالي: <b class="price">${egp(sub)}</b></p>
+    <div class="field"><label>عنوان الشحن</label><textarea id="addr" rows="3" placeholder="المحافظة، المدينة، الشارع…"></textarea></div>
+    <div class="field"><label>طريقة الدفع</label><div class="pill" style="padding:9px;display:block">💵 الدفع عند الاستلام (COD)</div></div>
+    <button class="btn" style="width:100%" onclick="placeOrder()">تأكيد الطلب</button></div>`;
+}
+function placeOrder(){
+  const addr=document.getElementById('addr').value.trim(); if(!addr){ alert('أدخل عنوان الشحن'); return; }
+  const c=cart();
+  const items=c.map(it=>{ const p=db.products.find(x=>x.id===it.pid); return {pid:p.id,name:p.name,qty:it.qty,price:p.price}; });
+  const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const order={ id:nid('order'), uid:db.session, addr, total, status:'pending', payment:'unpaid', method:'cod', ts:Date.now(), items };
+  db.orders.push(order);
+  items.forEach(i=>{ const p=db.products.find(x=>x.id===i.pid); if(p.type==='own_stock') p.stock=Math.max(0,p.stock-i.qty); });
+  track('begin_checkout'); sourceOrder(order); track('purchase',{orderId:order.id});
+  cartClear(); save(); go('order',order.id);
+}
+function viewOrders(){
+  const u=me(); if(!u) return `<h1>طلباتي</h1><p class="muted">سجّل الدخول لعرض طلباتك.</p><a onclick="go('login')">دخول</a>`;
+  const list=db.orders.filter(o=>o.uid===u.id).reverse();
+  if(!list.length) return `<h1>طلباتي</h1><p class="muted">لا طلبات بعد.</p>`;
+  const AR={pending:'قيد المراجعة',processing:'جارٍ التجهيز',shipped:'تم الشحن',completed:'تم التسليم',cancelled:'ملغي'};
+  return `<h1>طلباتي</h1><table><tr><th>الطلب</th><th>التاريخ</th><th>الإجمالي</th><th>الحالة</th></tr>
+    ${list.map(o=>`<tr style="cursor:pointer" onclick="go('order',${o.id})"><td>#${o.id}</td>
+    <td class="muted">${new Date(o.ts).toLocaleDateString('ar-EG')}</td><td>${egp(o.total)}</td>
+    <td><span class="pill">${AR[o.status]||o.status}</span></td></tr>`).join('')}</table>`;
+}
+function viewOrder(id){
+  const o=db.orders.find(x=>x.id===id); if(!o) return '<p>غير موجود</p>';
+  const ps=db.pos.filter(p=>p.orderId===id && p.status!=='cancelled');
+  const stage=set=> ps.length && ps.every(p=>set.includes(p.status));
+  const someProc = ps.some(p=>['purchasing','purchased','shipped','delivered'].includes(p.status));
+  const steps=[{l:'تم استلام طلبك',done:true},{l:'جارٍ تجهيز طلبك',done:someProc},
+    {l:'تم شحن طلبك',done:stage(['shipped','delivered'])},{l:'تم التسليم',done:stage(['delivered'])}];
+  return `<a onclick="go('orders')">← كل الطلبات</a><h1>تتبّع الطلب #${o.id}</h1>
+   <div class="box"><ul class="steps">${steps.map((s,i)=>`<li><span class="dot ${s.done?'done':''}">${s.done?'✓':i+1}</span><div>${s.l}</div></li>`).join('')}</ul></div>
+   <div class="box" style="margin-top:16px"><h3>تفاصيل الطلب</h3>
+   ${o.items.map(i=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0ebe4"><span>${i.name} × ${i.qty}</span><span>${egp(i.price*i.qty)}</span></div>`).join('')}
+   <div style="display:flex;justify-content:space-between;margin-top:8px"><b>الإجمالي</b><b class="price">${egp(o.total)}</b></div></div>
+   <p class="note" style="margin-top:10px">عنوان الشحن: ${o.addr} · الدفع: عند الاستلام</p>`;
+}
+function viewLogin(){
+  const g = GOOGLE_CLIENT_ID
+    ? `<div id="gbtn"></div><p class="note">زر Google أعلاه حقيقي (يعمل عند التشغيل عبر http وأصل مُصرّح).</p>`
+    : `<button class="btn ghost" style="width:100%" onclick="googleDemo()">🔵 الدخول عبر Google (تجريبي)</button>
+       <p class="note">Google الحقيقي يحتاج Client ID وتشغيل الملف عبر http (لا يعمل من file://). عدّل GOOGLE_CLIENT_ID داخل الملف.</p>`;
+  return `<div class="box" style="max-width:380px;margin:auto"><h1>تسجيل الدخول</h1>
+    <div class="field"><label>البريد</label><input id="email" value="admin@example.com"></div>
+    <div class="field"><label>كلمة المرور</label><input id="pass" type="password" value="admin1234"></div>
+    <button class="btn" style="width:100%" onclick="loginAdmin(document.getElementById('email').value,document.getElementById('pass').value)">دخول</button>
+    <hr>${g}
+    <p class="note" style="margin-top:10px">تجريبي — مشغّل: admin@example.com / admin1234 · عميل: demo@example.com / demo1234</p></div>`;
+}
+function initRealGoogle(){
+  if(!window.google){ const s=document.createElement('script'); s.src="https://accounts.google.com/gsi/client"; s.async=true; s.onload=initRealGoogle; document.head.appendChild(s); return; }
+  google.accounts.id.initialize({ client_id:GOOGLE_CLIENT_ID, callback:handleGoogleCredential });
+  const el=document.getElementById('gbtn'); if(el) google.accounts.id.renderButton(el,{theme:'outline',size:'large',width:320});
+}
+
+/* ---------------- admin ---------------- */
+function viewAdminGate(){ return `<div class="box" style="max-width:420px;margin:auto"><h1>لوحة الإدارة</h1>
+  <p class="muted">للمشغّلين فقط. سجّل الدخول بحساب إداري (admin@example.com / admin1234).</p>
+  <button class="btn" onclick="go('login')">تسجيل الدخول</button></div>`; }
+let ADMIN_TAB='orders';
+function viewAdmin(){
+  const tabs=[['orders','الطلبات والتوريد'],['products','المنتجات'],['customers','العملاء'],['analytics','التحليلات'],['settings','إعدادات']];
+  const bar=`<div class="tabbar">${tabs.map(t=>`<button class="${ADMIN_TAB===t[0]?'active':''}" onclick="ADMIN_TAB='${t[0]}';render()">${t[1]}</button>`).join('')}</div>`;
+  const body={orders:adminOrders,products:adminProducts,customers:adminCustomers,analytics:adminAnalytics,settings:adminSettings}[ADMIN_TAB]();
+  return `<h1>لوحة تشغيل المتجر</h1>${bar}${body}`;
+}
+const PO_AR={pending_sourcing:'بانتظار التوريد',awaiting_approval:'بانتظار الموافقة',purchasing:'جارٍ الشراء',purchased:'تم الشراء',shipped:'تم الشحن',delivered:'تم التسليم',cancelled:'ملغي'};
+function byId(arr,id){ return arr.find(x=>x.id===id); }
+function adminOrders(){
+  const revenue=db.orders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total,0);
+  const openCost=db.pos.filter(p=>p.status!=='cancelled').reduce((s,p)=>s+(p.expected||0),0);
+  const margin=revenue? ((revenue-openCost)/revenue*100).toFixed(1):'—';
+  const stats=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px">
+    <div class="stat"><div class="l">طلبات</div><div class="v">${db.orders.length}</div></div>
+    <div class="stat"><div class="l">الإيراد</div><div class="v">${egp(revenue)}</div></div>
+    <div class="stat"><div class="l">تكلفة مفتوحة</div><div class="v">${egp(openCost)}</div></div>
+    <div class="stat"><div class="l">هامش تقديري</div><div class="v">${margin}${margin!=='—'?'%':''}</div></div></div>`;
+  if(!db.pos.length) return stats+`<p class="muted">لا أوامر شراء بعد — اطلب من المتجر لتراها هنا.</p>`;
+  const rows=db.pos.slice().reverse().map(po=>{
+    let act='';
+    if(po.status==='awaiting_approval') act=`<button class="btn sm" onclick="approve(byId(db.pos,${po.id}));render()">موافقة</button>
+       <button class="btn ghost sm" onclick="poTransition(byId(db.pos,${po.id}),'cancelled',prompt('سبب الرفض؟')||'—');render()">رفض</button>`;
+    else if(po.status==='purchasing') act=`<button class="btn sm" onclick="markPurchased(${po.id})">تسجيل الشراء</button>`;
+    else if(po.status==='purchased') act=`<button class="btn sm" onclick="shipPO(${po.id})">تسجيل الشحن</button>`;
+    else if(po.status==='shipped') act=`<button class="btn sm" onclick="poTransition(byId(db.pos,${po.id}),'delivered','تم التسليم');render()">تأكيد التسليم</button>`;
+    else if(po.status==='pending_sourcing') act=`<span class="note">${po.events[po.events.length-1]?.note||''}</span>`;
+    const pkg = po.status==='purchasing' && po.url ? `<div class="banner warn" style="margin-top:8px">حزمة الشراء: نفّذ لدى <b>${po.supplier}</b> — <a href="${po.url}" target="_blank">فتح الرابط ↗</a> · الكمية ${po.qty} · اشحن لعنوان العميل، ثم «تسجيل الشراء».</div>`:'';
+    return `<div class="box" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <div><b>${po.product} × ${po.qty}</b><div class="note">طلب #${po.orderId} · المورد: ${po.supplier||'—'} · تكلفة متوقعة: ${po.expected!=null?egp(po.expected):'—'}${po.ref?' · مرجع: '+po.ref:''}${po.tracking?' · تتبع: '+po.tracking:''}</div></div>
+      <span class="pill">${PO_AR[po.status]}</span></div>${pkg}<div style="margin-top:8px">${act}</div></div>`;
+  }).join('');
+  return stats+rows;
+}
+function markPurchased(id){ const po=byId(db.pos,id); const ref=prompt('مرجع طلب المورد؟'); if(!ref)return; po.ref=ref; const c=prompt('التكلفة الفعلية (اختياري)؟'); if(c)po.actual=+c; poTransition(po,'purchased','تم الشراء — مرجع: '+ref); render(); }
+function shipPO(id){ const po=byId(db.pos,id); const t=prompt('رقم التتبع؟'); if(!t)return; po.tracking=t; po.carrier=prompt('شركة الشحن؟')||''; poTransition(po,'shipped','شُحن — تتبع: '+t); render(); }
+
+function adminProducts(){
+  const rows=db.products.slice().reverse().map(p=>`<tr><td>${p.name}</td><td>${egp(p.price)}</td>
+    <td><span class="pill">${p.type==='own_stock'?'مخزون خاص':'دروب شيبينج'}</span></td>
+    <td>${p.type==='own_stock'?p.stock:'—'}</td>
+    <td>${p.type==='dropship'?('عروض: '+p.offers.length):'—'}</td>
+    <td>${p.type==='dropship'?`<a style="cursor:pointer" onclick="editOffers(${p.id})">إدارة العروض</a>`:''}</td></tr>`).join('');
+  return `<div style="display:flex;justify-content:space-between;margin-bottom:12px"><h2 style="margin:0">المنتجات (${db.products.length})</h2>
+    <button class="btn" onclick="openAddProduct()">+ إضافة منتج</button></div>
+    <table><tr><th>المنتج</th><th>السعر</th><th>النوع</th><th>المخزون</th><th>العروض</th><th></th></tr>${rows}</table>
+    <p class="note" style="margin-top:8px">أضف منتجاً من مخزونك، أو من نون/أولكس/جوميا/أي متجر (بإضافة عرض يحمل اسم المتجر + الرابط + التكلفة).</p>`;
+}
+function openAddProduct(){
+  showModal(`<h2>إضافة منتج</h2>
+    <div class="field"><label>اسم المنتج</label><input id="np_name"></div>
+    <div class="field"><label>سعر البيع (ج.م)</label><input id="np_price" type="number"></div>
+    <div class="field"><label>الوصف</label><input id="np_desc"></div>
+    <div class="field"><label>نوع التوريد</label><select id="np_type" onchange="document.getElementById('np_sw').style.display=this.value==='own_stock'?'block':'none'">
+      <option value="dropship">دروب شيبينج (شراء من متجر عند البيع)</option>
+      <option value="own_stock">مخزون خاص (بيع من عندك)</option></select></div>
+    <div id="np_sw" style="display:none"><div class="rowflex">
+      <div class="field" style="flex:1"><label>الكمية</label><input id="np_stock" type="number" value="10"></div>
+      <div class="field" style="flex:1"><label>تكلفتك</label><input id="np_cost" type="number"></div></div></div>
+    <div class="rowflex" style="justify-content:flex-end;gap:8px"><button class="btn ghost" onclick="closeModal()">إلغاء</button>
+      <button class="btn" onclick="saveProduct()">حفظ</button></div>
+    <p class="note" style="margin-top:8px">لمنتج دروب شيبينج: احفظ ثم «إدارة العروض» لربط نون/أولكس/جوميا/أي متجر.</p>`);
+}
+function saveProduct(){
+  const name=v('np_name'), price=+v('np_price'), type=v('np_type');
+  if(!name||!price){ alert('اكتب الاسم والسعر'); return; }
+  const p={ id:nid('product'), name, price, type, desc:v('np_desc'), tags:'', active:true,
+    stock: type==='own_stock'?(+v('np_stock')||0):999, cost: type==='own_stock'?(+v('np_cost')||null):null, offers:[] };
+  db.products.push(p); save(); closeModal();
+  if(type==='dropship') editOffers(p.id); else render();
+}
+function editOffers(pid){
+  const p=db.products.find(x=>x.id===pid);
+  const list=p.offers.map((o,i)=>`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #f0ebe4">
+    <span><b>${o.supplier}</b> — تكلفة ${egp(o.cost)} + شحن ${egp(o.ship)} ${o.url?`· <a href="${o.url}" target="_blank">الرابط ↗</a>`:''}</span>
+    <a style="color:#b42318;cursor:pointer" onclick="delOffer(${pid},${i})">حذف</a></div>`).join('')||'<p class="note">لا عروض بعد.</p>';
+  showModal(`<h2>عروض: ${p.name}</h2>
+    <p class="note">الوكيل يختار أرخص عرض يحقق هامش ≥ ${MARGIN_MIN}% عند البيع.</p>
+    <div style="margin:10px 0">${list}</div><hr>
+    <div class="field"><label>اسم المتجر/المورد</label><input id="of_sup" placeholder="نون مصر / أولكس / جوميا / أي متجر"></div>
+    <div class="field"><label>رابط المنتج لدى المتجر</label><input id="of_url" placeholder="https://…"></div>
+    <div class="rowflex"><div class="field" style="flex:1"><label>تكلفة المتجر</label><input id="of_cost" type="number"></div>
+      <div class="field" style="flex:1"><label>الشحن</label><input id="of_ship" type="number" value="0"></div></div>
+    <div class="rowflex" style="justify-content:flex-end;gap:8px"><button class="btn ghost" onclick="closeModal();render()">تم</button>
+      <button class="btn" onclick="addOffer(${pid})">إضافة عرض</button></div>`);
+}
+function addOffer(pid){
+  const p=db.products.find(x=>x.id===pid); const sup=v('of_sup'), cost=+v('of_cost');
+  if(!sup||!cost){ alert('اكتب اسم المتجر والتكلفة'); return; }
+  p.offers.push({supplier:sup,url:v('of_url'),cost,ship:+v('of_ship')||0}); save(); editOffers(pid);
+}
+function delOffer(pid,i){ const p=db.products.find(x=>x.id===pid); p.offers.splice(i,1); save(); editOffers(pid); }
+function adminCustomers(){
+  const custs=db.users.filter(u=>u.role==='customer').map(u=>{
+    const os=db.orders.filter(o=>o.uid===u.id && o.status!=='cancelled');
+    return Object.assign({},u,{n:os.length, spent:os.reduce((s,o)=>s+o.total,0)});
+  });
+  return `<h2>العملاء (${custs.length})</h2><table><tr><th>الاسم</th><th>البريد</th><th>الطلبات</th><th>الإنفاق</th><th>الدخول</th></tr>
+    ${custs.map(c=>`<tr><td>${c.name||'—'}</td><td>${c.email}</td><td>${c.n}</td><td>${egp(c.spent)}</td><td>${c.google?'Google':'كلمة مرور'}</td></tr>`).join('')||'<tr><td colspan=5 class="muted">لا عملاء بعد</td></tr>'}</table>`;
+}
+function adminAnalytics(){
+  const uniq=t=>new Set(db.events.filter(e=>!t||e.type===t).map(e=>e.sid)).size;
+  const cnt=t=>db.events.filter(e=>e.type===t).length;
+  const visitors=uniq(); const orders=cnt('purchase'); const conv=visitors?(orders/visitors*100).toFixed(1):0;
+  const funnel=[['زيارة',visitors],['مشاهدة منتج',uniq('product_view')],['إضافة للسلة',uniq('add_to_cart')],['بدء الدفع',uniq('begin_checkout')],['شراء',uniq('purchase')]];
+  const max=Math.max(1,...funnel.map(f=>f[1]));
+  const searches={}; db.events.filter(e=>e.type==='search'&&e.q).forEach(e=>searches[e.q]=(searches[e.q]||0)+1);
+  const views={}; db.events.filter(e=>e.type==='product_view'&&e.pid).forEach(e=>{const p=db.products.find(x=>x.id===e.pid); if(p)views[p.name]=(views[p.name]||0)+1;});
+  const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,6).map(kv=>`<div style="display:flex;justify-content:space-between"><span>${kv[0]}</span><b>${kv[1]}</b></div>`).join('')||'<p class="note">لا بيانات</p>';
+  return `<h2>تحليلات الزوّار</h2>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px">
+    <div class="stat"><div class="l">زوّار مميّزون</div><div class="v">${visitors}</div></div>
+    <div class="stat"><div class="l">مشاهدات المنتجات</div><div class="v">${cnt('product_view')}</div></div>
+    <div class="stat"><div class="l">عمليات بحث</div><div class="v">${cnt('search')}</div></div>
+    <div class="stat"><div class="l">معدل التحويل</div><div class="v">${conv}%</div></div></div>
+    <div class="box funnel"><h3>مسار الشراء (Funnel)</h3>${funnel.map(f=>`<div class="row"><span class="lab">${f[0]}</span>
+      <div class="bar"><div class="fill" style="width:${Math.max(6,f[1]/max*100)}%">${f[1]}</div></div></div>`).join('')}</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:16px">
+      <div class="box"><h3>أكثر المنتجات مشاهدة</h3>${top(views)}</div>
+      <div class="box"><h3>أكثر عبارات البحث</h3>${top(searches)}</div></div>`;
+}
+function adminSettings(){
+  return `<div class="box" style="max-width:520px"><h2>إعدادات الوكيل</h2>
+    <div class="field"><label>نمط وكيل الشراء</label>
+      <select onchange="db.config.agentMode=this.value;save()">
+        <option value="assisted" ${db.config.agentMode==='assisted'?'selected':''}>مساعَد — المشغّل ينفّذ الشراء (آمن)</option>
+        <option value="simulation" ${db.config.agentMode==='simulation'?'selected':''}>محاكاة — تنفيذ آلي تجريبي (بلا مال)</option>
+      </select></div>
+    <p class="note">في النسخة الكاملة يوجد نمط «api» عبر connector رسمي (Amazon Business أو مورد API).</p>
+    <hr><h3>البيانات</h3><p class="note">كل شيء محفوظ محلياً في متصفحك (localStorage).</p>
+    <button class="btn ghost" onclick="if(confirm('إعادة ضبط كل البيانات التجريبية؟'))reset()">إعادة ضبط البيانات التجريبية</button></div>`;
+}
+
+/* ---------------- modal ---------------- */
+function showModal(html){ closeModal(); const m=document.createElement('div'); m.className='modal'; m.id='modal';
+  m.innerHTML='<div class="inner">'+html+'</div>'; m.onclick=e=>{ if(e.target===m)closeModal(); }; document.body.appendChild(m); }
+function closeModal(){ const m=document.getElementById('modal'); if(m)m.remove(); }
+function v(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
+
+/* ---------------- boot ---------------- */
+load(); render();
+</script>
+</body>
+</html>

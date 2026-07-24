@@ -1,0 +1,189 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
+import { api } from "@/lib/api";
+import { fmtEGP } from "@/lib/format";
+import type { ApproveResult, Dashboard, PurchaseOrder } from "@/lib/types";
+import { Btn, Stat } from "./ui";
+
+const STATUS_AR: Record<string, string> = {
+  pending_sourcing: "بانتظار التوريد",
+  awaiting_approval: "بانتظار الموافقة",
+  purchasing: "جارٍ الشراء",
+  purchased: "تم الشراء",
+  shipped: "تم الشحن",
+  delivered: "تم التسليم",
+  failed: "فشل",
+  cancelled: "ملغي",
+};
+const TABS = ["awaiting_approval", "pending_sourcing", "purchasing", "purchased", "shipped", "delivered"];
+
+/**
+ * Renders the purchase order management interface for administrators.
+ *
+ * Displays dashboard metrics, status-based order lists, purchase workflow actions,
+ * notifications, and purchase execution details.
+ *
+ * @returns The purchase order management interface.
+ */
+export default function OrdersSection() {
+  const [dash, setDash] = useState<Dashboard | null>(null);
+  const [tab, setTab] = useState("awaiting_approval");
+  const [pos, setPos] = useState<PurchaseOrder[]>([]);
+  const [pkg, setPkg] = useState<ApproveResult | null>(null);
+  const [msg, setMsg] = useState("");
+
+  const loadTab = useCallback(async (t: string) => setPos(await api.adminPurchaseOrders(t)), []);
+  const refresh = useCallback(async () => {
+    setDash(await api.adminDashboard());
+    await loadTab(tab);
+  }, [tab, loadTab]);
+
+  useEffect(() => {
+    api.adminDashboard().then(setDash).catch(() => {});
+  }, []);
+  useEffect(() => {
+    loadTab(tab);
+  }, [tab, loadTab]);
+
+  const flash = (t: string) => {
+    setMsg(t);
+    setTimeout(() => setMsg(""), 4000);
+  };
+
+  const onApprove = async (po: PurchaseOrder) => {
+    try {
+      const res = await api.adminApprove(po.id);
+      setPkg(res);
+      flash(res.result === "purchased" ? "تم الشراء آلياً (محاكاة)." : "تمت الموافقة — الحزمة جاهزة.");
+      await refresh();
+    } catch (e) {
+      flash((e as Error).message);
+    }
+  };
+  const onReject = async (po: PurchaseOrder) => {
+    const note = prompt("سبب الرفض؟");
+    if (!note) return;
+    await api.adminReject(po.id, note, confirm("إلغاء البند نهائياً؟ (موافق = إلغاء)"));
+    flash("تم الرفض.");
+    await refresh();
+  };
+  const onMark = async (po: PurchaseOrder) => {
+    const ref = prompt("مرجع طلب المورد؟");
+    if (!ref) return;
+    await api.adminMarkPurchased(po.id, ref, prompt("التكلفة الفعلية (اختياري)؟") || undefined);
+    flash("تم تسجيل الشراء.");
+    await refresh();
+  };
+  const onShip = async (po: PurchaseOrder) => {
+    const t = prompt("رقم التتبع؟");
+    if (!t) return;
+    await api.adminShip(po.id, t, prompt("شركة الشحن (اختياري)؟") || undefined);
+    flash("تم تسجيل الشحن.");
+    await refresh();
+  };
+  const onDeliver = async (po: PurchaseOrder) => {
+    await api.adminDeliver(po.id);
+    flash("تم التسليم.");
+    await refresh();
+  };
+
+  return (
+    <div className="space-y-5">
+      {dash && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat label="طلبات اليوم" value={String(dash.orders_today)} />
+          <Stat label="إجمالي الإيراد" value={fmtEGP(dash.revenue_total)} />
+          <Stat label="تكلفة مفتوحة" value={fmtEGP(dash.expected_cost_open)} />
+          <Stat
+            label="هامش تقديري"
+            value={dash.estimated_margin_percent != null ? `${dash.estimated_margin_percent.toFixed(1)}%` : "—"}
+          />
+        </div>
+      )}
+      {msg && <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">{msg}</div>}
+
+      {pkg && pkg.result !== "purchased" && (
+        <div className="rounded-lg border-2 border-brand bg-brand/5 p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="font-bold text-brand">حزمة الشراء — نفّذها لدى المورد</h3>
+            <button onClick={() => setPkg(null)} className="text-sm text-stone-500">
+              إغلاق ✕
+            </button>
+          </div>
+          <ul className="space-y-1 text-sm">
+            <li>المورد: {pkg.package.supplier}</li>
+            <li>
+              رابط المنتج:{" "}
+              {pkg.package.product_url ? (
+                <a href={pkg.package.product_url} target="_blank" rel="noreferrer" className="text-brand underline">
+                  فتح صفحة المورد ↗
+                </a>
+              ) : "—"}
+            </li>
+            <li>الكمية: {pkg.package.quantity}</li>
+            <li>السعر الأقصى للوحدة: {pkg.package.max_unit_price}</li>
+            <li>عنوان الشحن (العميل): {pkg.package.ship_to_address}</li>
+          </ul>
+          <p className="mt-2 rounded bg-white p-2 text-xs text-stone-600">{pkg.package.instructions}</p>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`rounded-full border px-3 py-1 text-sm ${
+              tab === t ? "border-brand bg-brand text-white" : "border-stone-300"
+            }`}
+          >
+            {STATUS_AR[t]}
+            {dash && dash.po_counts[t] ? ` (${dash.po_counts[t]})` : ""}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {pos.length === 0 && <p className="text-stone-500">لا توجد أوامر في هذه الحالة.</p>}
+        {pos.map((po) => (
+          <div key={po.id} className="rounded-lg border border-stone-200 bg-white p-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-medium">
+                  {po.product_name} × {po.quantity}
+                </p>
+                <p className="text-sm text-stone-500">
+                  طلب #{po.order_id} · المورد: {po.supplier_name || "مخزونك الخاص"} · تكلفة متوقعة:{" "}
+                  {po.expected_cost ? fmtEGP(po.expected_cost) : "—"}
+                </p>
+                {po.supplier_order_ref && <p className="text-xs text-stone-400">مرجع المورد: {po.supplier_order_ref}</p>}
+                {po.tracking_no && <p className="text-xs text-stone-400">تتبع: {po.tracking_no}</p>}
+              </div>
+              <span className="rounded-full bg-stone-100 px-2 py-1 text-xs">{STATUS_AR[po.status]}</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {po.status === "awaiting_approval" && (
+                <>
+                  <Btn onClick={() => onApprove(po)}>موافقة</Btn>
+                  <Btn variant="ghost" onClick={() => onReject(po)}>
+                    رفض
+                  </Btn>
+                </>
+              )}
+              {po.status === "purchasing" && <Btn onClick={() => onMark(po)}>تسجيل الشراء</Btn>}
+              {po.status === "purchased" && <Btn onClick={() => onShip(po)}>تسجيل الشحن</Btn>}
+              {po.status === "shipped" && <Btn onClick={() => onDeliver(po)}>تأكيد التسليم</Btn>}
+              {po.status === "pending_sourcing" && (
+                <span className="text-xs text-amber-700">
+                  {po.events[po.events.length - 1]?.note || "بانتظار عرض توريد مناسب"}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

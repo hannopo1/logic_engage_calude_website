@@ -1,0 +1,307 @@
+import type {
+  AdminReview,
+  Analytics,
+  ApproveResult,
+  Cart,
+  Category,
+  ChatResponse,
+  Coupon,
+  CouponValidation,
+  Customer,
+  Dashboard,
+  Offer,
+  Order,
+  Product,
+  ProductAdmin,
+  ProductList,
+  PurchaseOrder,
+  Review,
+  ReviewBlock,
+  Supplier,
+  TimelineStep,
+} from "./types";
+
+const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API = `${BASE}/api/v1`;
+
+/** A stable anonymous session id, so an unauthenticated cart persists. */
+function sessionId(): string {
+  if (typeof window === "undefined") return "server";
+  let sid = localStorage.getItem("sid");
+  if (!sid) {
+    sid = crypto.randomUUID();
+    localStorage.setItem("sid", sid);
+  }
+  return sid;
+}
+
+/**
+ * Retrieves the stored authentication token in browser environments.
+ *
+ * @returns The stored authentication token, or `null` when unavailable.
+ */
+function token(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("token");
+}
+
+/**
+ * Builds request headers with session identification and optional JSON content type.
+ *
+ * @param json - Whether to include the JSON content type header
+ * @returns Headers containing the session identifier and, when available, bearer authentication
+ */
+function headers(json = true): Record<string, string> {
+  const h: Record<string, string> = {};
+  if (json) h["Content-Type"] = "application/json";
+  h["X-Session-Id"] = sessionId();
+  const t = token();
+  if (t) h["Authorization"] = `Bearer ${t}`;
+  return h;
+}
+
+/**
+ * Parses a successful response or throws an error for an unsuccessful response.
+ *
+ * @param res - The response to process
+ * @returns The parsed response body
+ * @throws An error containing the response detail or status text when the response is unsuccessful
+ */
+async function handle<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      detail = (await res.json()).detail || detail;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(detail);
+  }
+  return res.json() as Promise<T>;
+}
+
+export const api = {
+  // Catalog
+  products: (params = "") =>
+    fetch(`${API}/products${params}`, { cache: "no-store" }).then(handle<ProductList>),
+  product: (slug: string) =>
+    fetch(`${API}/products/${slug}`, { cache: "no-store" }).then(handle<Product>),
+  categories: () =>
+    fetch(`${API}/categories`, { cache: "no-store" }).then(handle<Category[]>),
+  search: (q: string) =>
+    fetch(`${API}/search?q=${encodeURIComponent(q)}`, { cache: "no-store" }).then(
+      handle<Product[]>,
+    ),
+  recommend: (id: number) =>
+    fetch(`${API}/ai/recommend/${id}`, { cache: "no-store" }).then(
+      handle<{ similar: Product[]; also_bought: Product[] }>,
+    ),
+
+  // Wishlist (auth required)
+  wishlist: () =>
+    fetch(`${API}/wishlist`, { headers: headers(false) }).then(handle<Product[]>),
+  addWishlist: (productId: number) =>
+    fetch(`${API}/wishlist/${productId}`, { method: "POST", headers: headers(false) }).then(
+      handle<Product>,
+    ),
+  removeWishlist: (productId: number) =>
+    fetch(`${API}/wishlist/${productId}`, { method: "DELETE", headers: headers(false) }).then(
+      handle<{ removed: boolean }>,
+    ),
+
+  // Reviews
+  productReviews: (slug: string) =>
+    fetch(`${API}/products/${slug}/reviews`, { cache: "no-store" }).then(handle<ReviewBlock>),
+  submitReview: (productId: number, body: { rating: number; title?: string; body: string }) =>
+    fetch(`${API}/products/${productId}/reviews`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<Review>),
+
+  // Cart
+  getCart: () => fetch(`${API}/cart`, { headers: headers(false) }).then(handle<Cart>),
+  addToCart: (product_id: number, quantity = 1) =>
+    fetch(`${API}/cart/items`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ product_id, quantity }),
+    }).then(handle<Cart>),
+  updateCart: (product_id: number, quantity: number) =>
+    fetch(`${API}/cart/items/${product_id}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify({ quantity }),
+    }).then(handle<Cart>),
+  removeFromCart: (product_id: number) =>
+    fetch(`${API}/cart/items/${product_id}`, {
+      method: "DELETE",
+      headers: headers(false),
+    }).then(handle<Cart>),
+
+  // Orders
+  checkout: (shipping_address: string) =>
+    fetch(`${API}/orders`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ shipping_address }),
+    }).then(handle<Order>),
+  checkoutWith: (shipping_address: string, payment_method = "cod", coupon_code?: string) =>
+    fetch(`${API}/orders`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ shipping_address, payment_method, coupon_code: coupon_code || null }),
+    }).then(handle<Order>),
+  validateCoupon: (code: string, subtotal: string) =>
+    fetch(`${API}/coupons/validate`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ code, subtotal }),
+    }).then(handle<CouponValidation>),
+  myOrders: () =>
+    fetch(`${API}/orders`, { headers: headers(false) }).then(handle<Order[]>),
+  order: (id: number) =>
+    fetch(`${API}/orders/${id}`, { headers: headers(false) }).then(handle<Order>),
+  orderTimeline: (id: number) =>
+    fetch(`${API}/orders/${id}/timeline`, { headers: headers(false) }).then(
+      handle<TimelineStep[]>,
+    ),
+
+  // Admin (operator) — drop-shipping control room
+  adminDashboard: () =>
+    fetch(`${API}/admin/dashboard`, { headers: headers(false) }).then(handle<Dashboard>),
+  adminPurchaseOrders: (status?: string) =>
+    fetch(`${API}/admin/purchase-orders${status ? `?status=${status}` : ""}`, {
+      headers: headers(false),
+    }).then(handle<PurchaseOrder[]>),
+  adminApprove: (id: number) =>
+    fetch(`${API}/admin/purchase-orders/${id}/approve`, {
+      method: "POST",
+      headers: headers(false),
+    }).then(handle<ApproveResult & { po: PurchaseOrder }>),
+  adminReject: (id: number, note: string, cancel: boolean) =>
+    fetch(`${API}/admin/purchase-orders/${id}/reject`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ note, cancel }),
+    }).then(handle<PurchaseOrder>),
+  adminMarkPurchased: (id: number, supplier_order_ref: string, actual_cost?: string) =>
+    fetch(`${API}/admin/purchase-orders/${id}/mark-purchased`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ supplier_order_ref, actual_cost }),
+    }).then(handle<PurchaseOrder>),
+  adminShip: (id: number, tracking_no: string, carrier?: string) =>
+    fetch(`${API}/admin/purchase-orders/${id}/ship`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ tracking_no, carrier }),
+    }).then(handle<PurchaseOrder>),
+  adminDeliver: (id: number) =>
+    fetch(`${API}/admin/purchase-orders/${id}/deliver`, {
+      method: "POST",
+      headers: headers(false),
+    }).then(handle<PurchaseOrder>),
+  adminSuppliers: () =>
+    fetch(`${API}/admin/suppliers`, { headers: headers(false) }).then(handle<Supplier[]>),
+  adminCoupons: () =>
+    fetch(`${API}/admin/coupons`, { headers: headers(false) }).then(handle<Coupon[]>),
+  adminCreateCoupon: (body: Record<string, unknown>) =>
+    fetch(`${API}/admin/coupons`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<Coupon>),
+  adminPatchCoupon: (id: number, body: Record<string, unknown>) =>
+    fetch(`${API}/admin/coupons/${id}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<Coupon>),
+  adminReviews: (status = "pending") =>
+    fetch(`${API}/admin/reviews?status=${status}`, { headers: headers(false) }).then(
+      handle<AdminReview[]>,
+    ),
+  adminApproveReview: (id: number) =>
+    fetch(`${API}/admin/reviews/${id}/approve`, {
+      method: "POST",
+      headers: headers(false),
+    }).then(handle<AdminReview>),
+  adminRejectReview: (id: number) =>
+    fetch(`${API}/admin/reviews/${id}/reject`, {
+      method: "POST",
+      headers: headers(false),
+    }).then(handle<{ deleted: boolean }>),
+
+  // Merchant console — products / customers / analytics
+  adminProducts: () =>
+    fetch(`${API}/admin/products`, { headers: headers(false) }).then(handle<ProductAdmin[]>),
+  adminCreateProduct: (body: Record<string, unknown>) =>
+    fetch(`${API}/admin/products`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<ProductAdmin>),
+  adminPatchProduct: (id: number, body: Record<string, unknown>) =>
+    fetch(`${API}/admin/products/${id}`, {
+      method: "PATCH",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<ProductAdmin>),
+  adminOffersFor: (productId: number) =>
+    fetch(`${API}/admin/offers?product_id=${productId}`, { headers: headers(false) }).then(
+      handle<Offer[]>,
+    ),
+  adminCreateOffer: (body: Record<string, unknown>) =>
+    fetch(`${API}/admin/offers`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<Offer>),
+  adminCustomers: () =>
+    fetch(`${API}/admin/customers`, { headers: headers(false) }).then(handle<Customer[]>),
+  adminAnalytics: (days = 30) =>
+    fetch(`${API}/admin/analytics?days=${days}`, { headers: headers(false) }).then(
+      handle<Analytics>,
+    ),
+
+  // Public analytics ingest (fire-and-forget)
+  track: (body: { event_type: string; path?: string; product_id?: number; query?: string }) =>
+    fetch(`${API}/events`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+      keepalive: true,
+    }).catch(() => {}),
+
+  // Auth
+  register: (body: { email: string; password: string; first_name?: string }) =>
+    fetch(`${API}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(handle<{ access_token: string }>),
+  login: (body: { email: string; password: string }) =>
+    fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(handle<{ access_token: string }>),
+
+  // AI
+  chat: (message: string, history: { role: string; content: string }[] = []) =>
+    fetch(`${API}/ai/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, history }),
+    }).then(handle<ChatResponse>),
+};
+
+/**
+ * Stores an authentication token for subsequent API requests.
+ *
+ * @param t - The authentication token to store
+ */
+export function setToken(t: string) {
+  localStorage.setItem("token", t);
+}
