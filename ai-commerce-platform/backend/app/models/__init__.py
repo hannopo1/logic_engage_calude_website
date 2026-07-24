@@ -9,3 +9,4 @@ from app.models.purchase_order import PurchaseOrder, PurchaseOrderEvent  # noqa:
 from app.models.analytics import AnalyticsEvent  # noqa: F401
 from app.models.coupon import Coupon  # noqa: F401
 from app.models.review import Review  # noqa: F401
+from app.models.wishlist import WishlistItem  # noqa: F401

@@ -97,6 +97,18 @@ export const api = {
       handle<{ similar: Product[]; also_bought: Product[] }>,
     ),
 
+  // Wishlist (auth required)
+  wishlist: () =>
+    fetch(`${API}/wishlist`, { headers: headers(false) }).then(handle<Product[]>),
+  addWishlist: (productId: number) =>
+    fetch(`${API}/wishlist/${productId}`, { method: "POST", headers: headers(false) }).then(
+      handle<Product>,
+    ),
+  removeWishlist: (productId: number) =>
+    fetch(`${API}/wishlist/${productId}`, { method: "DELETE", headers: headers(false) }).then(
+      handle<{ removed: boolean }>,
+    ),
+
   // Reviews
   productReviews: (slug: string) =>
     fetch(`${API}/products/${slug}/reviews`, { cache: "no-store" }).then(handle<ReviewBlock>),

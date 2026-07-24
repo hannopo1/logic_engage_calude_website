@@ -1,10 +1,11 @@
 "use client";
 
-import { Coffee, LayoutGrid, ShoppingBag, ShoppingCart, User } from "lucide-react";
+import { Coffee, Heart, LayoutGrid, ShoppingBag, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 const LINKS = [
   { href: "/products", label: "المتجر", icon: LayoutGrid },
@@ -17,6 +18,7 @@ const LINKS = [
  */
 export default function Navbar() {
   const { cart } = useCart();
+  const { count: wishCount } = useWishlist();
   const count = cart?.item_count ?? 0;
   const pathname = usePathname();
 
@@ -55,6 +57,22 @@ export default function Navbar() {
             }`}
           >
             الإدارة
+          </Link>
+
+          <Link
+            href="/wishlist"
+            aria-label="المفضلة"
+            className={`relative flex items-center gap-1.5 rounded-full px-3 py-2 font-medium transition ${
+              isActive("/wishlist") ? "bg-ink text-white" : "text-muted hover:bg-ink/5 hover:text-ink"
+            }`}
+          >
+            <Heart className="h-4 w-4" />
+            <span className="hidden sm:inline">المفضلة</span>
+            {wishCount > 0 && (
+              <span className="absolute -left-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-xs font-bold text-ink ring-2 ring-paper">
+                {wishCount}
+              </span>
+            )}
           </Link>
 
           <Link

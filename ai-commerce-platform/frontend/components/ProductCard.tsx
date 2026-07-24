@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Stars } from "@/components/Stars";
+import WishlistButton from "@/components/WishlistButton";
 import { useCart } from "@/context/CartContext";
 import { fmtEGP } from "@/lib/format";
 import type { Product } from "@/lib/types";
@@ -30,7 +31,8 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">
+      <WishlistButton productId={product.id} />
       <Link href={`/product/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200">
           {product.image ? (

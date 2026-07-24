@@ -145,3 +145,17 @@ UNIQUE(product_id, user_id)   ← one review per customer per product
 - **Moderation:** reviews are created with `is_approved=false` and appear on the
   storefront only after an operator approves them. `rating_avg`/`rating_count`
   exposed on products aggregate **approved** reviews only.
+
+---
+
+## Phase 6 — wishlist (migration `0006`)
+
+```
+wishlist_items
+──────────────
+id (PK) · user_id → users.id (CASCADE) · product_id → products.id (CASCADE) · created_at
+UNIQUE(user_id, product_id)   ← one row per customer per product
+```
+
+- Auth-only. Adds/removes are idempotent. The storefront heart toggle and the
+  `/wishlist` page read/write these rows; the nav badge shows the saved count.

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductReviews from "@/components/ProductReviews";
 import { Stars } from "@/components/Stars";
+import WishlistButton from "@/components/WishlistButton";
 import { useCart } from "@/context/CartContext";
 import { api } from "@/lib/api";
 import { fmtEGP } from "@/lib/format";
@@ -110,6 +111,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             {added ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
             {soldOut ? "غير متوفر" : busy ? "جارٍ الإضافة…" : added ? "تمت الإضافة ✓" : "أضف للسلة"}
           </button>
+
+          <WishlistButton productId={product.id} variant="button" />
 
           <div className="flex items-center gap-2 rounded-2xl border border-line bg-white p-3 text-sm text-muted">
             <Truck className="h-5 w-5 text-brand" />

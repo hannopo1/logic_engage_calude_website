@@ -130,3 +130,15 @@ Every schema and example is available live in Swagger at `/docs`.
 | GET | `/admin/reviews?status=pending\|all` | moderation queue |
 | POST | `/admin/reviews/{id}/approve` | publish the review |
 | POST | `/admin/reviews/{id}/reject` | delete the review |
+
+---
+
+## Phase 6 — wishlist (auth required)
+
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/wishlist` | products the current user saved, newest first |
+| POST | `/wishlist/{product_id}` | add to wishlist (idempotent); 404 if product missing |
+| DELETE | `/wishlist/{product_id}` | remove from wishlist (idempotent) |
+
+All three require authentication (401 otherwise). One row per (user, product).

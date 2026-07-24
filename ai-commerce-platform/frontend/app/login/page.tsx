@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { api, setToken } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 /**
  * Renders the login and registration page with authentication controls.
@@ -13,6 +14,7 @@ import { useCart } from "@/context/CartContext";
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useCart();
+  const { refresh: refreshWishlist } = useWishlist();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("demo@example.com");
   const [password, setPassword] = useState("demo1234");
@@ -30,6 +32,7 @@ export default function LoginPage() {
           : await api.register({ email, password });
       setToken(res.access_token);
       await refresh();
+      await refreshWishlist();
       router.push("/products");
     } catch (err) {
       setError((err as Error).message);

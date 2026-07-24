@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Tracker from "@/components/Tracker";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 
 const almarai = Almarai({
   subsets: ["arabic"],
@@ -36,13 +37,15 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" className={almarai.variable}>
       <body className="flex min-h-dvh flex-col font-sans">
         <CartProvider>
-          <Suspense fallback={null}>
-            <Tracker />
-          </Suspense>
-          <Navbar />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:py-10">{children}</main>
-          <Footer />
-          <AiAssistant />
+          <WishlistProvider>
+            <Suspense fallback={null}>
+              <Tracker />
+            </Suspense>
+            <Navbar />
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:py-10">{children}</main>
+            <Footer />
+            <AiAssistant />
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>

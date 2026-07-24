@@ -1,12 +1,25 @@
 """Aggregate v1 routers under a single APIRouter."""
 from fastapi import APIRouter
 
-from app.api.v1 import auth, categories, products, search, cart, orders, ai, admin, events, coupons
+from app.api.v1 import (
+    auth,
+    categories,
+    products,
+    search,
+    cart,
+    orders,
+    ai,
+    admin,
+    events,
+    coupons,
+    wishlist,
+)
 
 api_router = APIRouter()
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(events.router, prefix="/events", tags=["analytics"])
 api_router.include_router(coupons.router, prefix="/coupons", tags=["coupons"])
+api_router.include_router(wishlist.router, prefix="/wishlist", tags=["wishlist"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(categories.router, prefix="/categories", tags=["categories"])
 api_router.include_router(products.router, prefix="/products", tags=["products"])
