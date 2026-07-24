@@ -43,8 +43,10 @@ function ProductsInner() {
       <div className="flex flex-wrap gap-2">
         <a
           href="/products"
-          className={`rounded-full border px-3 py-1 text-sm ${
-            !category ? "border-brand bg-brand text-white" : "border-stone-300"
+          className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+            !category
+              ? "border-ink bg-ink text-white"
+              : "border-line text-muted hover:border-ink hover:text-ink"
           }`}
         >
           الكل
@@ -53,10 +55,10 @@ function ProductsInner() {
           <a
             key={c.id}
             href={`/products?category=${c.slug}`}
-            className={`rounded-full border px-3 py-1 text-sm ${
+            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
               category === c.slug
-                ? "border-brand bg-brand text-white"
-                : "border-stone-300"
+                ? "border-ink bg-ink text-white"
+                : "border-line text-muted hover:border-ink hover:text-ink"
             }`}
           >
             {c.name}
@@ -64,14 +66,18 @@ function ProductsInner() {
         ))}
       </div>
 
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-xl font-extrabold text-ink">
         {q ? `نتائج البحث عن «${q}»` : "كل المنتجات"}
       </h1>
 
       {loading ? (
-        <p className="text-stone-500">جارٍ التحميل…</p>
+        <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-72 animate-pulse rounded-2xl bg-stone-200/60" />
+          ))}
+        </div>
       ) : products.length === 0 ? (
-        <p className="text-stone-500">لا توجد منتجات مطابقة.</p>
+        <p className="text-muted">لا توجد منتجات مطابقة.</p>
       ) : (
         <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
           {products.map((p) => (

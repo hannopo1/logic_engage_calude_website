@@ -1,8 +1,10 @@
 "use client";
 
+import { Coffee, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { Stars } from "@/components/Stars";
 import { useCart } from "@/context/CartContext";
 import { fmtEGP } from "@/lib/format";
 import type { Product } from "@/lib/types";
@@ -10,6 +12,8 @@ import type { Product } from "@/lib/types";
 export default function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
   const [busy, setBusy] = useState(false);
+  const soldOut = product.stock_qty <= 0;
+  const count = product.rating_count ?? 0;
 
   const onAdd = async () => {
     setBusy(true);
@@ -23,23 +27,56 @@ export default function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm transition hover:shadow-md">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-lift">
       <Link href={`/product/${product.slug}`} className="block">
-        <div className="flex h-40 items-center justify-center bg-stone-100 text-4xl">
-          ☕
-        </div>
-        <div className="p-4">
-          <h3 className="line-clamp-2 min-h-[2.5rem] font-medium">{product.name}</h3>
-          <p className="mt-1 text-lg font-bold text-brand">{fmtEGP(product.price)}</p>
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200">
+          {product.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="grid h-full w-full place-items-center text-stone-300">
+              <Coffee className="h-14 w-14" />
+            </div>
+          )}
+          {soldOut && (
+            <span className="absolute right-2 top-2 rounded-full bg-ink/80 px-2 py-1 text-xs font-medium text-white">
+              غير متوفر
+            </span>
+          )}
         </div>
       </Link>
-      <div className="mt-auto p-4 pt-0">
+
+      <div className="flex flex-1 flex-col p-4">
+        <Link href={`/product/${product.slug}`}>
+          <h3 className="line-clamp-2 min-h-[2.75rem] font-bold leading-snug text-ink hover:text-brand">
+            {product.name}
+          </h3>
+        </Link>
+
+        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted">
+          {count > 0 ? (
+            <>
+              <Stars value={product.rating_avg ?? 0} size={14} />
+              <span>({count})</span>
+            </>
+          ) : (
+            <span className="text-stone-400">لا توجد تقييمات بعد</span>
+          )}
+        </div>
+
+        <p className="mt-2 text-lg font-extrabold text-brand">{fmtEGP(product.price)}</p>
+
         <button
           onClick={onAdd}
-          disabled={busy || product.stock_qty <= 0}
-          className="w-full rounded-md bg-brand py-2 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
+          disabled={busy || soldOut}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-dark py-2.5 text-sm font-semibold text-white transition hover:bg-ink disabled:opacity-50"
         >
-          {product.stock_qty <= 0 ? "غير متوفر" : busy ? "جارٍ الإضافة…" : "أضف للسلة"}
+          <Plus className="h-4 w-4" />
+          {soldOut ? "غير متوفر" : busy ? "جارٍ الإضافة…" : "أضف للسلة"}
         </button>
       </div>
     </div>

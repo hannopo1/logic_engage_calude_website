@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 
 export function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-4">
-      <p className="text-xs text-stone-500">{label}</p>
-      <p className="mt-1 text-lg font-bold text-brand">{value}</p>
+    <div className="rounded-2xl border border-line bg-white p-4 shadow-card">
+      <p className="text-xs text-muted">{label}</p>
+      <p className="mt-1 text-lg font-extrabold text-brand">{value}</p>
     </div>
   );
 }
@@ -29,10 +29,10 @@ export function Btn({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-50 ${
+      className={`rounded-xl px-4 py-2 text-sm font-semibold disabled:opacity-50 ${
         variant === "solid"
-          ? "bg-brand text-white hover:bg-brand-dark"
-          : "border border-stone-300 text-stone-600 hover:bg-stone-50"
+          ? "bg-brand-dark text-white hover:bg-ink"
+          : "border border-line text-muted hover:bg-stone-50"
       }`}
     >
       {children}
@@ -56,4 +56,4 @@ export function Field({
 }
 
 export const inputCls =
-  "w-full rounded-md border border-stone-300 p-2.5 text-sm outline-none focus:border-brand";
+  "w-full rounded-xl border border-line p-2.5 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";

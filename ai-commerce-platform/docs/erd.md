@@ -125,3 +125,23 @@ orders  +columns: discount_amount (default 0) · coupon_code
   never trusted. `used_count` is incremented atomically when the order is placed.
 - `orders.total_amount` stores the **discounted** total; `discount_amount` and
   `coupon_code` record what was applied for the receipt and reporting.
+
+---
+
+## Phase 5 — product reviews (migration `0005`)
+
+```
+reviews
+──────────────
+id (PK) · product_id → products.id (CASCADE) · user_id → users.id (CASCADE)
+order_id → orders.id (SET NULL, proof of purchase)
+rating (1..5) · title · body · is_verified · is_approved · created_at
+UNIQUE(product_id, user_id)   ← one review per customer per product
+```
+
+- **Verified purchase gate:** a review can be created only when the user has an
+  `order_items` row for that product (join through `orders.user_id`). So every
+  review is a verified purchase; `order_id` records which order proved it.
+- **Moderation:** reviews are created with `is_approved=false` and appear on the
+  storefront only after an operator approves them. `rating_avg`/`rating_count`
+  exposed on products aggregate **approved** reviews only.

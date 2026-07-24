@@ -4,12 +4,29 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models.category import Category
 from app.models.product import Product
+from app.models.user import User
 from app.schemas.catalog import ProductList, ProductOut
+from app.schemas.review import ReviewBlock, ReviewIn, ReviewOut, ReviewSummary
+from app.services import review_service
 
 router = APIRouter()
+
+
+def _with_ratings(db: Session, products: list[Product]) -> list[ProductOut]:
+    """Serialize products, attaching approved-review rating aggregates (no N+1)."""
+    stats = review_service.approved_stats_map(db, [p.id for p in products])
+    out: list[ProductOut] = []
+    for p in products:
+        item = ProductOut.model_validate(p)
+        avg, count = stats.get(p.id, (0.0, 0))
+        item.rating_avg = avg
+        item.rating_count = count
+        out.append(item)
+    return out
 
 
 @router.get("", response_model=ProductList)
@@ -32,11 +49,13 @@ def list_products(
         stmt = stmt.where(Product.price <= max_price)
 
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
-    rows = db.scalars(
-        stmt.order_by(Product.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+    rows = list(
+        db.scalars(
+            stmt.order_by(Product.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+        )
     )
     return ProductList(
-        items=[ProductOut.model_validate(p) for p in rows],
+        items=_with_ratings(db, rows),
         total=total,
         page=page,
         page_size=page_size,
@@ -44,8 +63,35 @@ def list_products(
 
 
 @router.get("/{slug}", response_model=ProductOut)
-def get_product(slug: str, db: Session = Depends(get_db)) -> Product:
+def get_product(slug: str, db: Session = Depends(get_db)) -> ProductOut:
     product = db.scalar(select(Product).where(Product.slug == slug, Product.is_active.is_(True)))
     if product is None:
         raise HTTPException(status_code=404, detail="Product not found")
-    return product
+    return _with_ratings(db, [product])[0]
+
+
+@router.get("/{slug}/reviews", response_model=ReviewBlock)
+def get_product_reviews(slug: str, db: Session = Depends(get_db)) -> ReviewBlock:
+    product = db.scalar(select(Product).where(Product.slug == slug))
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return ReviewBlock(
+        summary=ReviewSummary(**review_service.summary(db, product.id)),
+        items=[ReviewOut.model_validate(r) for r in review_service.list_approved(db, product.id)],
+    )
+
+
+@router.post("/{product_id}/reviews", response_model=ReviewOut, status_code=201)
+def create_product_review(
+    product_id: int,
+    payload: ReviewIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> ReviewOut:
+    product = db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    review = review_service.create_review(
+        db, user, product, payload.rating, payload.body, payload.title
+    )
+    return ReviewOut.model_validate(review)

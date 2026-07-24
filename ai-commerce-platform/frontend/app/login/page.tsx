@@ -1,5 +1,6 @@
 "use client";
 
+import { Coffee } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -34,19 +35,28 @@ export default function LoginPage() {
     }
   };
 
+  const inputCls =
+    "w-full rounded-xl border border-line p-3 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
+
   return (
     <div className="mx-auto max-w-sm space-y-6">
-      <h1 className="text-2xl font-bold">
-        {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب"}
-      </h1>
-      <form onSubmit={submit} className="space-y-4">
+      <div className="flex flex-col items-center gap-2 text-center">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-ink text-brand-light">
+          <Coffee className="h-6 w-6" />
+        </span>
+        <h1 className="text-2xl font-extrabold text-ink">
+          {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب"}
+        </h1>
+      </div>
+
+      <form onSubmit={submit} className="space-y-4 rounded-2xl border border-line bg-white p-6 shadow-card">
         <input
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="البريد الإلكتروني"
-          className="w-full rounded-md border border-stone-300 p-3 outline-none focus:border-brand"
+          className={inputCls}
         />
         <input
           type="password"
@@ -54,25 +64,25 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="كلمة المرور"
-          className="w-full rounded-md border border-stone-300 p-3 outline-none focus:border-brand"
+          className={inputCls}
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           disabled={busy}
-          className="w-full rounded-md bg-brand py-3 font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+          className="w-full rounded-xl bg-brand-dark py-3 font-semibold text-white hover:bg-ink disabled:opacity-50"
         >
           {busy ? "…" : mode === "login" ? "دخول" : "تسجيل"}
         </button>
+        <button
+          type="button"
+          onClick={() => setMode(mode === "login" ? "register" : "login")}
+          className="w-full text-sm font-medium text-brand hover:underline"
+        >
+          {mode === "login" ? "ليس لديك حساب؟ سجّل الآن" : "لديك حساب؟ سجّل الدخول"}
+        </button>
       </form>
-      <button
-        onClick={() => setMode(mode === "login" ? "register" : "login")}
-        className="text-sm text-brand underline"
-      >
-        {mode === "login"
-          ? "ليس لديك حساب؟ سجّل الآن"
-          : "لديك حساب؟ سجّل الدخول"}
-      </button>
-      <p className="text-xs text-stone-400">
+
+      <p className="text-center text-xs text-muted">
         حساب تجريبي: demo@example.com / demo1234 — للإدارة: admin@example.com / admin1234
       </p>
     </div>

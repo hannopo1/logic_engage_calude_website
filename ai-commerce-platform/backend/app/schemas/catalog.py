@@ -26,6 +26,8 @@ class ProductOut(BaseModel):
     tags: str | None = None
     category_id: int | None = None
     seo_title: str | None = None
+    rating_avg: float = 0.0
+    rating_count: int = 0
 
     model_config = {"from_attributes": True}
 

@@ -29,23 +29,23 @@ export default function OrdersPage() {
   if (needLogin) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">طلباتي</h1>
-        <p className="text-stone-500">سجّل الدخول لعرض طلباتك.</p>
-        <Link href="/login" className="text-brand underline">
+        <h1 className="text-2xl font-extrabold text-ink">طلباتي</h1>
+        <p className="text-muted">سجّل الدخول لعرض طلباتك.</p>
+        <Link href="/login" className="font-semibold text-brand hover:underline">
           تسجيل الدخول
         </Link>
       </div>
     );
   }
 
-  if (orders === null) return <p className="text-stone-500">جارٍ التحميل…</p>;
+  if (orders === null) return <p className="text-muted">جارٍ التحميل…</p>;
 
   if (orders.length === 0) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">طلباتي</h1>
-        <p className="text-stone-500">لا توجد طلبات بعد.</p>
-        <Link href="/products" className="text-brand underline">
+        <h1 className="text-2xl font-extrabold text-ink">طلباتي</h1>
+        <p className="text-muted">لا توجد طلبات بعد.</p>
+        <Link href="/products" className="font-semibold text-brand hover:underline">
           ابدأ التسوّق
         </Link>
       </div>
@@ -54,21 +54,21 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">طلباتي</h1>
-      <div className="divide-y divide-stone-200 rounded-lg border border-stone-200 bg-white">
+      <h1 className="text-2xl font-extrabold text-ink">طلباتي</h1>
+      <div className="divide-y divide-line rounded-2xl border border-line bg-white">
         {orders.map((o) => (
           <Link
             key={o.id}
             href={`/orders/${o.id}`}
-            className="flex items-center justify-between p-4 hover:bg-stone-50"
+            className="flex items-center justify-between p-4 transition hover:bg-stone-50"
           >
             <div>
-              <p className="font-medium">طلب #{o.id}</p>
-              <p className="text-sm text-stone-500">{fmtDate(o.created_at)}</p>
+              <p className="font-bold text-ink">طلب #{o.id}</p>
+              <p className="text-sm text-muted">{fmtDate(o.created_at)}</p>
             </div>
             <div className="text-left">
-              <p className="font-bold text-brand">{fmtEGP(o.total_amount)}</p>
-              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs">
+              <p className="font-extrabold text-brand">{fmtEGP(o.total_amount)}</p>
+              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-muted">
                 {STATUS_AR[o.status] || o.status}
               </span>
             </div>

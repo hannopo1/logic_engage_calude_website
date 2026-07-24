@@ -38,6 +38,8 @@ from app.schemas.fulfillment import (
     SupplierPatch,
 )
 from app.schemas.coupon import CouponIn, CouponOut, CouponPatch
+from app.models.review import Review
+from app.schemas.review import AdminReviewOut
 from app.schemas.merchant import (
     AnalyticsOut,
     CustomerOut,
@@ -483,3 +485,37 @@ def admin_patch_coupon(coupon_id: int, payload: CouponPatch, db: Session = Depen
     db.commit()
     db.refresh(coupon)
     return coupon
+
+
+# ---------- review moderation ----------
+
+@router.get("/reviews", response_model=list[AdminReviewOut])
+def admin_list_reviews(
+    status: str = Query(default="pending", pattern="^(pending|all)$"),
+    db: Session = Depends(get_db),
+) -> list[Review]:
+    stmt = select(Review).order_by(Review.created_at.desc()).limit(500)
+    if status == "pending":
+        stmt = stmt.where(Review.is_approved.is_(False))
+    return list(db.scalars(stmt))
+
+
+@router.post("/reviews/{review_id}/approve", response_model=AdminReviewOut)
+def admin_approve_review(review_id: int, db: Session = Depends(get_db)) -> Review:
+    review = db.get(Review, review_id)
+    if review is None:
+        raise HTTPException(status_code=404, detail="المراجعة غير موجودة")
+    review.is_approved = True
+    db.commit()
+    db.refresh(review)
+    return review
+
+
+@router.post("/reviews/{review_id}/reject")
+def admin_reject_review(review_id: int, db: Session = Depends(get_db)) -> dict:
+    review = db.get(Review, review_id)
+    if review is None:
+        raise HTTPException(status_code=404, detail="المراجعة غير موجودة")
+    db.delete(review)
+    db.commit()
+    return {"deleted": True}

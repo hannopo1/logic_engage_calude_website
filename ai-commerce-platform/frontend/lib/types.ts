@@ -10,6 +10,8 @@ export interface Product {
   tags?: string | null;
   category_id?: number | null;
   seo_title?: string | null;
+  rating_avg?: number;
+  rating_count?: number;
 }
 
 export interface ProductList {
@@ -215,4 +217,38 @@ export interface CouponValidation {
   kind: string;
   discount: string;
   new_total: string;
+}
+
+// ---------- Reviews ----------
+
+export interface Review {
+  id: number;
+  rating: number;
+  title?: string | null;
+  body: string;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface ReviewSummary {
+  average: number;
+  count: number;
+  distribution: Record<string, number>; // {"1":.., ... "5":..}
+}
+
+export interface ReviewBlock {
+  summary: ReviewSummary;
+  items: Review[];
+}
+
+export interface AdminReview {
+  id: number;
+  product_id: number;
+  user_id: number;
+  rating: number;
+  title?: string | null;
+  body: string;
+  is_verified: boolean;
+  is_approved: boolean;
+  created_at: string;
 }

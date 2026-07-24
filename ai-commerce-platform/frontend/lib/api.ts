@@ -1,4 +1,5 @@
 import type {
+  AdminReview,
   Analytics,
   ApproveResult,
   Cart,
@@ -14,6 +15,8 @@ import type {
   ProductAdmin,
   ProductList,
   PurchaseOrder,
+  Review,
+  ReviewBlock,
   Supplier,
   TimelineStep,
 } from "./types";
@@ -75,6 +78,16 @@ export const api = {
     fetch(`${API}/ai/recommend/${id}`, { cache: "no-store" }).then(
       handle<{ similar: Product[]; also_bought: Product[] }>,
     ),
+
+  // Reviews
+  productReviews: (slug: string) =>
+    fetch(`${API}/products/${slug}/reviews`, { cache: "no-store" }).then(handle<ReviewBlock>),
+  submitReview: (productId: number, body: { rating: number; title?: string; body: string }) =>
+    fetch(`${API}/products/${productId}/reviews`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(body),
+    }).then(handle<Review>),
 
   // Cart
   getCart: () => fetch(`${API}/cart`, { headers: headers(false) }).then(handle<Cart>),
@@ -175,6 +188,20 @@ export const api = {
       headers: headers(),
       body: JSON.stringify(body),
     }).then(handle<Coupon>),
+  adminReviews: (status = "pending") =>
+    fetch(`${API}/admin/reviews?status=${status}`, { headers: headers(false) }).then(
+      handle<AdminReview[]>,
+    ),
+  adminApproveReview: (id: number) =>
+    fetch(`${API}/admin/reviews/${id}/approve`, {
+      method: "POST",
+      headers: headers(false),
+    }).then(handle<AdminReview>),
+  adminRejectReview: (id: number) =>
+    fetch(`${API}/admin/reviews/${id}/reject`, {
+      method: "POST",
+      headers: headers(false),
+    }).then(handle<{ deleted: boolean }>),
 
   // Merchant console — products / customers / analytics
   adminProducts: () =>

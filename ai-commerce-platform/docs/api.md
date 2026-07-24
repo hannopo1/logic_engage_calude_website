@@ -111,3 +111,22 @@ Every schema and example is available live in Swagger at `/docs`.
 | GET | `/admin/coupons` | list all coupons (active + inactive) |
 | POST | `/admin/coupons` | create `{code, kind: percent\|fixed, value, min_order?, max_uses?, expires_at?}`; duplicate code → 409 |
 | PATCH | `/admin/coupons/{id}` | edit value/limits or toggle `is_active` |
+
+---
+
+## Phase 5 — product reviews (verified purchase + moderation)
+
+### Public
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/products/{slug}/reviews` | `{summary:{average,count,distribution}, items:[…]}` — approved reviews only |
+| POST | `/products/{id}/reviews` | auth required; `{rating 1-5, title?, body}`. **403** unless the user bought the product; **409** if they already reviewed it. Created hidden (awaits moderation). |
+
+`ProductOut` (list + detail) gains `rating_avg` and `rating_count` (approved reviews).
+
+### Operator (admin role)
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | `/admin/reviews?status=pending\|all` | moderation queue |
+| POST | `/admin/reviews/{id}/approve` | publish the review |
+| POST | `/admin/reviews/{id}/reject` | delete the review |

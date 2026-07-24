@@ -7,10 +7,18 @@ import CouponsSection from "@/components/admin/CouponsSection";
 import CustomersSection from "@/components/admin/CustomersSection";
 import OrdersSection from "@/components/admin/OrdersSection";
 import ProductsSection from "@/components/admin/ProductsSection";
+import ReviewsSection from "@/components/admin/ReviewsSection";
 import SuppliersSection from "@/components/admin/SuppliersSection";
 import { api } from "@/lib/api";
 
-type Section = "orders" | "products" | "customers" | "analytics" | "coupons" | "suppliers";
+type Section =
+  | "orders"
+  | "products"
+  | "customers"
+  | "analytics"
+  | "coupons"
+  | "reviews"
+  | "suppliers";
 
 const NAV: { key: Section; label: string }[] = [
   { key: "orders", label: "الطلبات والتوريد" },
@@ -18,6 +26,7 @@ const NAV: { key: Section; label: string }[] = [
   { key: "customers", label: "العملاء" },
   { key: "analytics", label: "التحليلات" },
   { key: "coupons", label: "أكواد الخصم" },
+  { key: "reviews", label: "التقييمات" },
   { key: "suppliers", label: "الموردون" },
 ];
 
@@ -49,15 +58,15 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">لوحة تشغيل المتجر</h1>
+      <h1 className="text-2xl font-extrabold text-ink">لوحة تشغيل المتجر</h1>
 
-      <nav className="flex flex-wrap gap-2 border-b border-stone-200 pb-3">
+      <nav className="flex flex-wrap gap-2 border-b border-line pb-3">
         {NAV.map((n) => (
           <button
             key={n.key}
             onClick={() => setSection(n.key)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-              section === n.key ? "bg-brand text-white" : "text-stone-600 hover:bg-stone-100"
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              section === n.key ? "bg-ink text-white" : "text-muted hover:bg-stone-100"
             }`}
           >
             {n.label}
@@ -70,6 +79,7 @@ export default function AdminPage() {
       {section === "customers" && <CustomersSection />}
       {section === "analytics" && <AnalyticsSection />}
       {section === "coupons" && <CouponsSection />}
+      {section === "reviews" && <ReviewsSection />}
       {section === "suppliers" && <SuppliersSection />}
     </div>
   );
